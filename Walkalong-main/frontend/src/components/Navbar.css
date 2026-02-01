@@ -1,123 +1,55 @@
+/* Existing Navbar CSS... appending this */
+
 .navbar {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 95%;
-  /* Use percentage instead of fixed calculation */
-  max-width: none;
-  /* Allow it to grow */
-  background: var(--bg-secondary);
-  /* Solid background or semi-transparent based on specific sub-request */
-  border-bottom: 1px solid var(--glass-border);
-  /* Removed glass backdrop blur if 'no need of that glass' applies to whole bar or just tabs? 
-     User said 'no need of that glass in nav tabs'. 
-     I will keep bar glass but ensure tabs are distinct or flat. */
-  backdrop-filter: blur(10px);
-  /* ... Actually, 'overall nav bar is hding something behind' implies transparency issues or size.
-     Safe bet: Solid background for bar to prevent weird transparency overlap issues, or better padding. */
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  /* Top flat, bottom rounded */
-  top: 0;
-  /* Align to top to avoid floating gap issue */
-  z-index: 1000;
-  padding: var(--spacing-xs) var(--spacing-lg);
-  box-shadow: var(--glass-shadow);
-  transition: all var(--transition-normal);
-}
-
-.navbar:hover {
-  border-color: var(--glass-highlight);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.navbar-container {
+  /* Ensure existing flex properties allow for the button */
   display: flex;
   justify-content: space-between;
+  /* Links left, Toggle right */
   align-items: center;
-  height: 60px;
+  padding: 0 2rem;
+  /* Add horizontal padding */
 }
 
-.navbar-brand {
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-decoration: none;
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.02em;
+.navbar-links {
   display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
+  gap: 1rem;
+  height: 100%;
 }
 
-.navbar-menu {
-  display: flex;
-  gap: var(--spacing-xs);
-  background: rgba(0, 0, 0, 0.2);
-  padding: 4px;
-  border-radius: var(--radius-full);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.navbar-item {
+.theme-toggle-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-md);
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--glass-border);
+}
+
+/* Make sure nav-links usually fill height or align properly */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
   text-decoration: none;
   color: var(--text-secondary);
-  border-radius: var(--radius-full);
-  transition: all var(--transition-fast);
-  font-weight: 500;
-  font-size: 0.9rem;
-  position: relative;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
 }
 
-.navbar-item:hover {
+.nav-link:hover {
   color: var(--text-primary);
   background: rgba(255, 255, 255, 0.05);
 }
 
-.navbar-item.active {
-  color: #fff;
-  background: var(--accent-primary);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-}
-
-.navbar-item span {
-  display: inline-block;
-}
-
-@media (max-width: 960px) {
-  .navbar {
-    top: auto;
-    bottom: var(--spacing-md);
-    width: calc(100% - var(--spacing-md) * 2);
-    padding: var(--spacing-xs);
-  }
-
-  .navbar-brand {
-    display: none;
-  }
-
-  .navbar-container {
-    justify-content: center;
-    width: 100%;
-  }
-
-  .navbar-menu {
-    width: 100%;
-    justify-content: space-between;
-    gap: 0;
-  }
-
-  .navbar-item {
-    padding: var(--spacing-sm);
-    justify-content: center;
-  }
-
-  .navbar-item span {
-    display: none;
-  }
+.nav-link.active {
+  color: var(--accent-primary);
+  border-bottom-color: var(--accent-primary);
 }
