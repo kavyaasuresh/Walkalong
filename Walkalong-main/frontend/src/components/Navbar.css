@@ -1,27 +1,21 @@
 .navbar {
     position: fixed;
-    top: 1rem;
-    /* Floating effect */
     left: 50%;
     transform: translateX(-50%);
-    width: 90%;
-    max-width: 1200px;
-    background: rgba(20, 20, 25, 0.75);
-    /* Deep dark glass */
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 100px;
-    /* Full pill shape */
+    width: 95%;
+    /* Adjusted back to full width preference */
+    max-width: none;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--glass-border);
+    backdrop-filter: blur(10px);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    top: 0;
     z-index: 1000;
-    padding: 0.75rem 2rem;
-    box-shadow:
-        0 4px 20px rgba(0, 0, 0, 0.4),
-        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    padding: var(--spacing-xs) var(--spacing-lg);
+    box-shadow: var(--glass-shadow);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: all 0.3s ease;
 }
 
 .nav-brand {

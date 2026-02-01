@@ -1,70 +1,227 @@
 import React, { useState, useEffect } from 'react';
-import { workDoneAPI } from '../services/api';
-import { Book, Star } from 'lucide-react';
+import { Plus, Trash2, Save, Calendar, Star, BookOpen, Clock, Tag } from 'lucide-react';
+import { workDoneAPI, streamsAPI } from '../services/api';
 import './WorkDonePage.css';
 
 const WorkDonePage = () => {
-  const [entries, setEntries] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [currentEntry, setCurrentEntry] = useState({
+    items: [],
+    satisfactionLevel: 3,
+    notes: '',
+    totalPoints: 0
+  });
+  const [recentEntries, setRecentEntries] = useState([]);
+  const [streams, setStreams] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchHistory();
-  }, []);
+    fetchData();
+  }, [selectedDate]);
 
-  const fetchHistory = async () => {
+  const fetchData = async () => {
     try {
-      const res = await workDoneAPI.getAllEntries();
-      // Mock data if empty for visualization
-      const data = (res.data && res.data.length > 0) ? res.data : [
-        { id: 1, date: '2023-10-24', tasks: ['React Components', 'API Integration'], satisfaction: 5, notes: 'Great progress today!' },
-        { id: 2, date: '2023-10-23', tasks: ['CSS Grid'], satisfaction: 3, notes: 'Struggled with layout.' }
-      ];
-      setEntries(data);
-    } catch (error) {
-      console.error(error);
+      setLoading(true);
+      const [entryRes, streamsRes, historyRes] = await Promise.all([
+        workDoneAPI.getEntryByDate(selectedDate).catch(() => ({ data: null })), // Handle 404 gracefully
+        streamsAPI.getAllStreams(),
+        workDoneAPI.getAllEntries()
+      ]);
+
+      if (entryRes.data) {
+        setCurrentEntry(entryRes.data);
+      } else {
+        // Reset if no entry found for this date
+        setCurrentEntry({
+          items: [],
+          satisfactionLevel: 3,
+          notes: '',
+          totalPoints: 0
+        });
+      }
+
+      setStreams(streamsRes.data || []);
+      setRecentEntries(historyRes.data?.slice(0, 5) || []);
+
+    } catch (err) {
+      console.error("Data load failed", err);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="book-container">
-      <div className="book-spine"></div>
-      <div className="book-page left-page">
-        <header className="journal-header">
-          <h1>Work Journal</h1>
-          <p>Reflections & Records</p>
-        </header>
-        <div className="journal-intro">
-          <Book size={40} className="journal-icon" />
-          <p>"Discipline is the bridge between goals and accomplishment."</p>
-        </div>
-      </div>
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+  };
 
-      <div className="book-page right-page">
-        <div className="entries-list">
-          {entries.map((entry, idx) => (
-            <div key={entry.id} className="journal-entry">
-              <div className="entry-date">{entry.date}</div>
-              <div className="entry-content">
-                <ul className="entry-tasks">
-                  {entry.tasks && entry.tasks.map((t, i) => <li key={i}>{t}</li>)}
-                </ul>
-                {entry.notes && <p className="entry-notes">"{entry.notes}"</p>}
-                <div className="entry-satisfaction">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      size={14}
-                      fill={i < entry.satisfaction ? "#f59e0b" : "none"}
-                      stroke={i < entry.satisfaction ? "#f59e0b" : "#94a3b8"}
-                    />
-                  ))}
-                </div>
+  const addNewItem = () => {
+    const newItem = {
+      description: '',
+      hours: 1,
+      streamId: streams.length > 0 ? streams[0].id : '',
+      points: 10,
+      completed: true
+    };
+
+    setCurrentEntry(prev => ({
+      ...prev,
+      items: [...(prev?.items || []), newItem]
+    }));
+  };
+
+  const updateItem = (index, field, value) => {
+    setCurrentEntry(prev => ({
+      ...prev,
+      items: (prev?.items || []).map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+      )
+    }));
+  };
+
+  const removeItem = (index) => {
+    setCurrentEntry(prev => ({
+      ...prev,
+      items: (prev?.items || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const saveEntry = async () => {
+    try {
+      setSaving(true);
+      const entryToSave = {
+        ...currentEntry,
+        date: selectedDate,
+        totalPoints: currentEntry?.items?.reduce((acc, i) => acc + (i.points || 0), 0) || 0
+      };
+
+      if (currentEntry.id) {
+        await workDoneAPI.updateEntry(currentEntry.id, entryToSave);
+      } else {
+        const res = await workDoneAPI.createEntry(entryToSave);
+        setCurrentEntry(res.data);
+      }
+      // Refresh history
+      const history = await workDoneAPI.getAllEntries();
+      setRecentEntries(history.data?.slice(0, 5) || []);
+
+    } catch (err) {
+      console.error(err);
+      setError("Failed to save log.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+
+  const getDayOfWeek = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { weekday: 'long' });
+  };
+
+  if (loading) return <div className="loading">Opening Logbook...</div>;
+
+  return (
+    <div className="workdone-page">
+      <div className="school-logbook-container">
+
+        {/* Left Page: Cover / Summary */}
+        <div className="logbook-page left-page">
+          <div className="page-content">
+            <div className="logbook-header">
+              <h2>Daily Record</h2>
+              <div className="date-group">
+                <span className="log-day">{getDayOfWeek(selectedDate)}</span>
+                <span className="log-date">{selectedDate}</span>
               </div>
             </div>
-          ))}
+
+            <div className="quote-section">
+              <p>"Persist until you succeed."</p>
+            </div>
+
+            <div className="recent-memos">
+              <h3>Recent Memos</h3>
+              <ul>
+                {recentEntries.map(e => (
+                  <li key={e.id} onClick={() => setSelectedDate(e.date)} className={e.date === selectedDate ? 'active-memo' : ''}>
+                    <span className="memo-date">{e.date.slice(5)}</span>
+                    <span className="memo-sat">{'★'.repeat(e.satisfactionLevel)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
+
+        {/* Right Page: The Work Log */}
+        <div className="logbook-page right-page">
+          <div className="paper-texture">
+            <div className="table-header-row">
+              <span className="col-task">Task Description</span>
+              <span className="col-stream">Stream</span>
+              <span className="col-hours">Hrs</span>
+              <span className="col-action"></span>
+            </div>
+
+            <div className="ruled-lines">
+              {currentEntry.items.map((item, idx) => (
+                <div key={idx} className="log-row">
+                  <input
+                    type="text"
+                    className="handwritten-input task-input"
+                    value={item.description}
+                    onChange={e => updateItem(idx, 'description', e.target.value)}
+                    placeholder="Write task..."
+                  />
+                  <select
+                    className="handwritten-select"
+                    value={item.streamId}
+                    onChange={e => updateItem(idx, 'streamId', e.target.value)}
+                  >
+                    <option value="">Select Stream</option>
+                    {streams.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                  <input
+                    type="number"
+                    className="handwritten-input hours-input"
+                    value={item.hours}
+                    onChange={e => updateItem(idx, 'hours', parseFloat(e.target.value))}
+                  />
+                  <button onClick={() => removeItem(idx)} className="ink-btn-delete"><Trash2 size={14} /></button>
+                </div>
+              ))}
+              {/* Empty lines for visual effect */}
+              {[...Array(Math.max(0, 8 - currentEntry.items.length))].map((_, i) => (
+                <div key={`empty-${i}`} className="log-row empty-row"></div>
+              ))}
+            </div>
+
+            <button onClick={addNewItem} className="ink-btn-add">+ Add Record</button>
+
+            <div className="footer-satisfaction">
+              <span>Satisfaction:</span>
+              <div className="stars-input">
+                {[1, 2, 3, 4, 5].map(s => (
+                  <Star
+                    key={s}
+                    size={24}
+                    onClick={() => setCurrentEntry(prev => ({ ...prev, satisfactionLevel: s }))}
+                    fill={s <= currentEntry.satisfactionLevel ? "#d97706" : "none"}
+                    stroke="#d97706"
+                    style={{ cursor: 'pointer' }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <button onClick={saveEntry} className="stamp-save-btn">
+              {saving ? 'Saving...' : 'SAVE LOG'}
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   );

@@ -49,6 +49,21 @@
 }
 
 /* Time View - Vertical Timeline */
+.time-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.category-heading {
+  font-size: 1.5rem;
+  color: var(--accent-primary);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--glass-border);
+  font-family: 'JetBrains Mono', monospace;
+}
+
 .timeline-list {
   display: flex;
   flex-direction: column;

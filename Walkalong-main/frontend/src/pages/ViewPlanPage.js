@@ -74,23 +74,33 @@ const ViewPlanPage = () => {
       <div className="plan-content">
         {viewMode === 'TIME' ? (
           <div className="time-view">
-            {/* Existing Time View Logic - Preserved/Simplified */}
             {tasks.length === 0 ? <p className="empty-msg">No tasks scheduled.</p> : (
-              <div className="timeline-list">
-                {tasks.map(task => (
-                  <div key={task.id} className="timeline-item">
-                    <span className="time-marker">{task.deadline ? task.deadline.split('T')[1]?.slice(0, 5) : 'All Day'}</span>
-                    <div className="timeline-card-content">
-                      <div className="task-info">
-                        <h4>{task.title}</h4>
-                        <span className="badge">{task.stream?.name || 'General'}</span>
-                      </div>
-                      <div className="task-mini-status">
-                        {task.status === 'COMPLETED' ? <CheckCircle size={16} color="#10b981" /> : <Clock size={16} color="#f59e0b" />}
+              <div className="time-categories">
+                {['Daily', 'Weekly', 'Monthly'].map(category => {
+                  const categoryTasks = tasks.filter(t => (t.type || 'Daily').toLowerCase() === category.toLowerCase());
+                  if (categoryTasks.length === 0) return null;
+                  return (
+                    <div key={category} className="time-category-section">
+                      <h2 className="category-heading">{category} Plan</h2>
+                      <div className="timeline-list">
+                        {categoryTasks.map(task => (
+                          <div key={task.id} className="timeline-item">
+                            <span className="time-marker">{task.deadline ? task.deadline.split('T')[1]?.slice(0, 5) : 'All Day'}</span>
+                            <div className="timeline-card-content">
+                              <div className="task-info">
+                                <h4>{task.title}</h4>
+                                <span className="badge">{task.stream?.name || 'General'}</span>
+                              </div>
+                              <div className="task-mini-status">
+                                {task.status === 'COMPLETED' ? <CheckCircle size={16} color="#10b981" /> : <Clock size={16} color="#f59e0b" />}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
