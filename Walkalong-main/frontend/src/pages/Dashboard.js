@@ -4,7 +4,7 @@ import {
   PieChart, Pie, Cell, Legend, BarChart, Bar
 } from 'recharts';
 import {
-  Trophy, Calendar, Search, Heart, Clock, Activity, BookOpen, AlertCircle, X, ChevronsRight
+  Trophy, Calendar, Search, Heart, Clock, Activity, BookOpen, AlertCircle, X, ChevronsRight, Star
 } from 'lucide-react';
 import { moodAPI, streamsAPI, workDoneAPI, todoAPI } from '../services/api';
 import './Dashboard.css';
