@@ -1,496 +1,268 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Check, X, Clock, Play, Pause, Square, Filter, ChevronDown, ListTodo, CalendarDays, BarChart2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Trash2, Clock, Play, Pause, Save, Filter, ChevronDown, ListTodo, CalendarDays, BarChart2, Lock } from 'lucide-react';
 import { todoAPI, streamsAPI } from '../services/api';
 import './TasksPage.css';
 
 const TasksPage = () => {
   const [tasks, setTasks] = useState([]);
   const [streams, setStreams] = useState([]);
-  const [filteredTasks, setFilteredTasks] = useState([]);
-  const [newTask, setNewTask] = useState({
-    title: '',
-    type: 'DAILY',
-    duration: 30,
-    points: 10,
-    streamId: ''
-  });
-  const [filters, setFilters] = useState({
-    type: 'ALL',
-    status: 'ALL',
-    stream: 'ALL'
-  });
-  const [editingTask, setEditingTask] = useState(null);
-  const [timers, setTimers] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [newTask, setNewTask] = useState({ title: '', streamId: '', type: 'DAILY', deadline: '', revisionDate: '', revisionCount: 0 });
+  const [filter, setFilter] = useState('ALL');
+  const [activeTimer, setActiveTimer] = useState(null); // taskId
+  const [elapsedTime, setElapsedTime] = useState(0); // seconds
+  const timerRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+
+  // Constants
+  const STATUS_OPTIONS = ['PENDING', 'COMPLETED', 'SKIPPED'];
 
   useEffect(() => {
-    fetchTasks();
-    fetchStreams();
+    fetchData();
+    return () => clearInterval(timerRef.current);
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [tasks, filters]);
-
-  const fetchTasks = async () => {
+  const fetchData = async () => {
     try {
-      setLoading(true);
-      const response = await todoAPI.getAllTasks();
-      setTasks(response.data);
-    } catch (err) {
-      setError('Failed to load tasks');
-      console.error('Failed to fetch tasks:', err);
-      // Fallback for demo
-      setTasks([]);
+      const [tasksRes, streamsRes] = await Promise.all([
+        todoAPI.getAllTasks(),
+        streamsAPI.getAllStreams()
+      ]);
+      setTasks(tasksRes.data);
+      setStreams(streamsRes.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStreams = async () => {
+  const createTask = async (e) => {
+    e.preventDefault();
+    if (!newTask.title) return;
     try {
-      const response = await streamsAPI.getAllStreams();
-      setStreams(response.data);
-    } catch (err) {
-      console.error('Failed to fetch streams:', err);
-    }
-  };
-
-  const applyFilters = () => {
-    let filtered = [...tasks];
-
-    if (filters.type !== 'ALL') {
-      filtered = filtered.filter(task => task.type === filters.type);
-    }
-
-    if (filters.status !== 'ALL') {
-      filtered = filtered.filter(task => task.status === filters.status);
-    }
-
-    if (filters.stream !== 'ALL') {
-      filtered = filtered.filter(task => task.stream?.id?.toString() === filters.stream);
-    }
-
-    setFilteredTasks(filtered);
-  };
-
-  const createTask = async () => {
-    if (!newTask.title.trim()) return;
-
-    try {
-      const taskData = {
-        ...newTask,
-        stream: newTask.streamId ? { id: parseInt(newTask.streamId) } : null
-      };
-      const response = await todoAPI.createTask(taskData);
-      setTasks([response.data, ...tasks]);
-      setNewTask({ title: '', type: 'DAILY', duration: 30, points: 10, streamId: '' });
-    } catch (err) {
-      setError('Failed to create task');
-      console.error('Failed to create task:', err);
-    }
-  };
-
-  const updateTask = async (id, updates) => {
-    try {
-      const response = await todoAPI.updateTask(id, updates);
-      setTasks(tasks.map(task => task.id === id ? response.data : task));
-      setEditingTask(null);
-    } catch (err) {
-      setError('Failed to update task');
-      console.error('Failed to update task:', err);
+      const res = await todoAPI.createTask(newTask);
+      setTasks([...tasks, res.data]);
+      setNewTask({ title: '', streamId: '', type: 'DAILY', deadline: '', revisionDate: '', revisionCount: 0 });
+    } catch (error) {
+      console.error('Error creating task:', error);
     }
   };
 
   const updateTaskStatus = async (id, status) => {
     try {
-      const response = await todoAPI.updateTaskStatus(id, status);
-      setTasks(tasks.map(task => task.id === id ? response.data : task));
-    } catch (err) {
-      setError('Failed to update task status');
-      console.error('Failed to update task status:', err);
+      // Optimistic Update
+      setTasks(tasks.map(t => t.id === id ? { ...t, status } : t));
+      await todoAPI.updateTask(id, { status });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      fetchData(); // Revert
+    }
+  };
+
+  const updateTaskField = async (id, field, value) => {
+    const task = tasks.find(t => t.id === id);
+    if (task.status === 'COMPLETED') return; // Lock if completed
+
+    try {
+      setTasks(tasks.map(t => t.id === id ? { ...t, [field]: value } : t));
+      // Debounce or save on blur in real app, here direct for simplicity
+      await todoAPI.updateTask(id, { [field]: value });
+    } catch (error) {
+      console.error("Error updating field", error);
     }
   };
 
   const deleteTask = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this task?')) return;
-
+    if (!window.confirm('Delete this task?')) return;
     try {
       await todoAPI.deleteTask(id);
-      setTasks(tasks.filter(task => task.id !== id));
-    } catch (err) {
-      setError('Failed to delete task');
-      console.error('Failed to delete task:', err);
+      setTasks(tasks.filter(t => t.id !== id));
+    } catch (error) {
+      console.error('Error deleting task:', error);
     }
   };
 
-  // Timer functions
-  const startTimer = (taskId) => {
-    if (timers[taskId]?.isRunning) return; // Prevent multiple intervals
+  // Timer Logic
+  const toggleTimer = (taskId) => {
+    if (activeTimer === taskId) {
+      // Pause
+      clearInterval(timerRef.current);
+      setActiveTimer(null);
+    } else {
+      // Start
+      if (activeTimer) clearInterval(timerRef.current); // Stop others
+      setActiveTimer(taskId);
+      const task = tasks.find(t => t.id === taskId);
+      setElapsedTime(0); // In real app, load prev session time if needed
+      timerRef.current = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+    }
+  };
 
-    const timer = setInterval(() => {
-      setTimers(prev => ({
-        ...prev,
-        [taskId]: {
-          ...prev[taskId],
-          elapsed: (prev[taskId]?.elapsed || 0) + 1
-        }
-      }));
-    }, 1000);
+  const saveTime = async (taskId) => {
+    if (!activeTimer) return;
 
-    setTimers(prev => ({
-      ...prev,
-      [taskId]: {
-        ...prev[taskId],
-        timer,
-        isRunning: true
+    const minutes = Math.floor(elapsedTime / 60);
+    if (minutes > 0) {
+      const task = tasks.find(t => t.id === taskId);
+      const newDuration = (task.duration || 0) + minutes;
+
+      try {
+        await todoAPI.updateTask(taskId, { duration: newDuration });
+        setTasks(tasks.map(t => t.id === taskId ? { ...t, duration: newDuration } : t));
+        setElapsedTime(0); // Reset local counter after save
+      } catch (e) {
+        console.error("Failed to save time", e);
       }
-    }));
-  };
-
-  const pauseTimer = (taskId) => {
-    const timerData = timers[taskId];
-    if (timerData?.timer) {
-      clearInterval(timerData.timer);
-      setTimers(prev => ({
-        ...prev,
-        [taskId]: {
-          ...prev[taskId],
-          isRunning: false
-        }
-      }));
     }
-  };
-
-  const resetTimer = (taskId) => {
-    const timerData = timers[taskId];
-    if (timerData?.timer) {
-      clearInterval(timerData.timer);
-    }
-    setTimers(prev => ({
-      ...prev,
-      [taskId]: {
-        elapsed: 0,
-        isRunning: false,
-        timer: null
-      }
-    }));
   };
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'COMPLETED': return <Check size={18} className="status-icon completed" />;
-      case 'PENDING': return <Clock size={18} className="status-icon pending" />;
-      case 'SKIPPED': return <X size={18} className="status-icon skipped" />;
-      default: return <Clock size={18} className="status-icon" />;
-    }
-  };
-
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'DAILY': return <CalendarDays size={18} />;
-      case 'WEEKLY': return <BarChart2 size={18} />;
-      case 'MONTHLY': return <ListTodo size={18} />;
-      default: return <ListTodo size={18} />;
-    }
-  };
-
-  const getStreamName = (task) => {
-    return task.stream?.name || 'No Stream';
-  };
+  const filteredTasks = tasks.filter(t => filter === 'ALL' || t.status === filter);
 
   if (loading) return <div className="loading">Loading tasks...</div>;
 
   return (
-    <div className="tasks-page">
-      <div className="tasks-container">
-        <div className="tasks-header">
-          <h1>Task Hub</h1>
-          <p>Manage, track, and complete your learning goals</p>
-        </div>
+    <div className="tasks-page-container">
+      <div className="tasks-header">
+        <h1>Task Master</h1>
 
-        {error && <div className="error-message">{error}</div>}
+        {/* Quick Add Bar */}
+        <form className="quick-add-bar" onSubmit={createTask}>
+          <input
+            type="text"
+            placeholder="What needs to be done?"
+            value={newTask.title}
+            onChange={e => setNewTask({ ...newTask, title: e.target.value })}
+            className="qa-input"
+          />
+          <select
+            value={newTask.streamId}
+            onChange={e => setNewTask({ ...newTask, streamId: e.target.value })}
+            className="qa-select"
+          >
+            <option value="">No Stream</option>
+            {streams.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+          <select
+            value={newTask.type}
+            onChange={e => setNewTask({ ...newTask, type: e.target.value })}
+            className="qa-select"
+          >
+            <option value="DAILY">Daily</option>
+            <option value="WEEKLY">Weekly</option>
+            <option value="MONTHLY">Monthly</option>
+          </select>
+          <button type="submit" className="qa-btn"><Plus size={18} /> Add</button>
+        </form>
+      </div>
 
-        {/* Add New Task */}
-        <div className="add-task-section">
-          <div className="add-task-form">
-            <input
-              type="text"
-              placeholder="What needs to be done?"
-              value={newTask.title}
-              onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-              className="task-input"
-              onKeyPress={(e) => e.key === 'Enter' && createTask()}
-            />
+      <div className="tasks-table-wrapper">
+        <table className="tasks-table">
+          <thead>
+            <tr>
+              <th style={{ width: '30%' }}>Title</th>
+              <th>Stream</th>
+              <th>Deadline</th>
+              <th>Status</th>
+              <th>Timer</th>
+              <th>Revision</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredTasks.length === 0 ? (
+              <tr><td colSpan="7" className="empty-row">No tasks found</td></tr>
+            ) : (
+              filteredTasks.map(task => {
+                const isCompleted = task.status === 'COMPLETED';
+                const isTimerActive = activeTimer === task.id;
 
-            <select
-              value={newTask.streamId}
-              onChange={(e) => setNewTask({ ...newTask, streamId: e.target.value })}
-              className="task-stream"
-            >
-              <option value="">No Stream</option>
-              {streams.map(stream => (
-                <option key={stream.id} value={stream.id}>{stream.name}</option>
-              ))}
-            </select>
-
-            <select
-              value={newTask.type}
-              onChange={(e) => setNewTask({ ...newTask, type: e.target.value })}
-              className="task-type"
-            >
-              <option value="DAILY">Daily</option>
-              <option value="WEEKLY">Weekly</option>
-              <option value="MONTHLY">Monthly</option>
-            </select>
-
-            <input
-              type="number"
-              placeholder="Min"
-              value={newTask.duration}
-              onChange={(e) => setNewTask({ ...newTask, duration: parseInt(e.target.value) })}
-              className="task-duration"
-              min="5"
-              max="480"
-              title="Duration in minutes"
-            />
-
-            <input
-              type="number"
-              placeholder="Pts"
-              value={newTask.points}
-              onChange={(e) => setNewTask({ ...newTask, points: parseInt(e.target.value) })}
-              className="task-points"
-              min="1"
-              max="100"
-              title="Points"
-            />
-
-            <button onClick={createTask} className="add-btn">
-              <Plus size={20} />
-              Add
-            </button>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="filters-section">
-          <div className="filters">
-            <div className="filter-group">
-              <Filter size={18} />
-              <span>Filters</span>
-            </div>
-
-            <select
-              value={filters.type}
-              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-              className="filter-select"
-            >
-              <option value="ALL">All Types</option>
-              <option value="DAILY">Daily</option>
-              <option value="WEEKLY">Weekly</option>
-              <option value="MONTHLY">Monthly</option>
-            </select>
-
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              className="filter-select"
-            >
-              <option value="ALL">All Status</option>
-              <option value="PENDING">Pending</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="SKIPPED">Skipped</option>
-            </select>
-
-            <select
-              value={filters.stream}
-              onChange={(e) => setFilters({ ...filters, stream: e.target.value })}
-              className="filter-select"
-            >
-              <option value="ALL">All Streams</option>
-              {streams.map(stream => (
-                <option key={stream.id} value={stream.id}>{stream.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Tasks List */}
-        <div className="tasks-list">
-          {filteredTasks.length === 0 ? (
-            <div className="empty-state">
-              <Clock size={48} />
-              <h3>No tasks found</h3>
-              <p>Create a task or adjust your filters to see more.</p>
-            </div>
-          ) : (
-            filteredTasks.map(task => {
-              const timerData = timers[task.id] || { elapsed: 0, isRunning: false };
-              return (
-                <div key={task.id} className={`task-item ${task.status.toLowerCase()}`}>
-                  <div className="task-content">
-                    <div className="task-header">
-                      <span className="task-type-icon">{getTypeIcon(task.type)}</span>
-                      <div className="task-status-icon">{getStatusIcon(task.status)}</div>
-                      {editingTask === task.id ? (
-                        <input
-                          type="text"
-                          value={task.title}
-                          onChange={(e) => setTasks(tasks.map(t =>
-                            t.id === task.id ? { ...t, title: e.target.value } : t
-                          ))}
-                          onBlur={() => updateTask(task.id, { title: task.title })}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              updateTask(task.id, { title: task.title });
-                            }
-                          }}
-                          className="edit-input"
-                          autoFocus
-                        />
-                      ) : (
-                        <h3 className="task-title">{task.title}</h3>
-                      )}
-                      {task.stream && <span className="task-stream-badge">{getStreamName(task)}</span>}
-                      <span className="task-type-badge">{task.type}</span>
-                    </div>
-
-                    <div className="task-details">
-                      <div className="task-meta">
-                        <span className="task-duration" title="Planned Duration">
-                          <Clock size={14} />
-                          {task.duration}m
-                        </span>
-                        <span className="task-points" title="Points">
-                          {task.points}pts
-                        </span>
-                        <span className="task-date">
-                          {task.assignedDate}
-                        </span>
-                        {task.completedDate && (
-                          <span className="completed-date">
-                            <Check size={14} /> {task.completedDate}
-                          </span>
-                        )}
+                return (
+                  <tr key={task.id} className={`task-row ${isCompleted ? 'completed-row' : ''}`}>
+                    <td>
+                      <div className="task-title-cell">
+                        {isCompleted && <Lock size={14} className="lock-icon" />}
+                        <span className={isCompleted ? 'strikethrough' : ''}>{task.title}</span>
                       </div>
-                    </div>
-
-                    {/* Timer */}
-                    <div className="task-timer">
-                      <div className="timer-display">
-                        <Clock size={16} />
-                        <span className="timer-time">{formatTime(timerData.elapsed)}</span>
-                      </div>
-
-                      <div className="timer-controls">
-                        {!timerData.isRunning ? (
-                          <button
-                            onClick={() => startTimer(task.id)}
-                            className="timer-btn start"
-                            title="Start timer"
-                          >
-                            <Play size={16} />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => pauseTimer(task.id)}
-                            className="timer-btn pause"
-                            title="Pause timer"
-                          >
-                            <Pause size={16} />
-                          </button>
-                        )}
+                    </td>
+                    <td>
+                      <span className="stream-badge">{task.stream?.name || 'General'}</span>
+                    </td>
+                    <td>
+                      <input
+                        type="date"
+                        value={task.deadline ? task.deadline.split('T')[0] : ''}
+                        onChange={(e) => updateTaskField(task.id, 'deadline', e.target.value)}
+                        disabled={isCompleted}
+                        className="table-input date"
+                      />
+                    </td>
+                    <td>
+                      <select
+                        value={task.status}
+                        onChange={(e) => updateTaskStatus(task.id, e.target.value)}
+                        className={`status-dropdown ${task.status.toLowerCase()}`}
+                      >
+                        {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    </td>
+                    <td>
+                      <div className="timer-cell">
                         <button
-                          onClick={() => resetTimer(task.id)}
-                          className="timer-btn reset"
-                          title="Reset timer"
+                          className={`timer-btn ${isTimerActive ? 'active' : ''}`}
+                          onClick={() => toggleTimer(task.id)}
+                          disabled={isCompleted}
                         >
-                          <Square size={16} />
+                          {isTimerActive ? <Pause size={14} /> : <Play size={14} />}
                         </button>
+                        <span className="time-display">
+                          {isTimerActive ? formatTime(elapsedTime) : `${task.duration || 0}m`}
+                        </span>
+                        {isTimerActive && (
+                          <button className="save-time-btn" onClick={() => saveTime(task.id)} title="Save Time">
+                            <Save size={14} />
+                          </button>
+                        )}
                       </div>
-                      <span className="timer-status">
-                        {timerData.isRunning ? 'Active' : 'Ready'}
-                      </span>
-                    </div>
-
-                    {/* Revision Date */}
-                    {task.status !== 'COMPLETED' && (
-                      <div className="revision-section">
-                        <label className="revision-label">Revision:</label>
+                    </td>
+                    <td>
+                      <div className="revision-cell">
                         <input
                           type="date"
-                          value={task.revisionDate || ''}
-                          onChange={(e) => {
-                            const updatedTasks = tasks.map(t =>
-                              t.id === task.id ? { ...t, revisionDate: e.target.value } : t
-                            );
-                            setTasks(updatedTasks);
-                            updateTask(task.id, { revisionDate: e.target.value });
-                          }}
-                          className="revision-date-input"
+                          value={task.revisionDate ? task.revisionDate.split('T')[0] : ''}
+                          onChange={(e) => updateTaskField(task.id, 'revisionDate', e.target.value)}
+                          disabled={isCompleted}
+                          className="table-input date-small"
+                          title="Revision Date"
+                        />
+                        <input
+                          type="number"
+                          value={task.revisionCount || 0}
+                          onChange={(e) => updateTaskField(task.id, 'revisionCount', e.target.value)}
+                          disabled={isCompleted}
+                          className="table-input count-small"
+                          title="Revision Count"
                         />
                       </div>
-                    )}
-                  </div>
-
-                  <div className="task-actions">
-                    <div className="status-buttons">
-                      <button
-                        onClick={() => updateTaskStatus(task.id, 'COMPLETED')}
-                        className={`status-btn complete ${task.status === 'COMPLETED' ? 'active' : ''}`}
-                        title="Mark as completed"
-                      >
-                        <Check size={18} />
-                      </button>
-
-                      <button
-                        onClick={() => updateTaskStatus(task.id, 'PENDING')}
-                        className={`status-btn pending ${task.status === 'PENDING' ? 'active' : ''}`}
-                        title="Mark as pending"
-                      >
-                        <Clock size={18} />
-                      </button>
-
-                      <button
-                        onClick={() => updateTaskStatus(task.id, 'SKIPPED')}
-                        className={`status-btn skip ${task.status === 'SKIPPED' ? 'active' : ''}`}
-                        title="Mark as skipped"
-                      >
-                        <X size={18} />
-                      </button>
-                    </div>
-
-                    <div className="edit-delete-buttons">
-                      <button
-                        onClick={() => setEditingTask(editingTask === task.id ? null : task.id)}
-                        className="edit-btn"
-                        title="Edit task"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-
-                      <button
-                        onClick={() => deleteTask(task.id)}
-                        className="delete-btn"
-                        title="Delete task"
-                      >
+                    </td>
+                    <td>
+                      <button className="action-btn delete" onClick={() => deleteTask(task.id)}>
                         <Trash2 size={16} />
                       </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

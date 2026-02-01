@@ -1,17 +1,24 @@
 .navbar {
   position: fixed;
-  top: var(--spacing-md);
   left: 50%;
   transform: translateX(-50%);
   width: 95%;
   /* Use percentage instead of fixed calculation */
   max-width: none;
   /* Allow it to grow */
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-full);
+  background: var(--bg-secondary);
+  /* Solid background or semi-transparent based on specific sub-request */
+  border-bottom: 1px solid var(--glass-border);
+  /* Removed glass backdrop blur if 'no need of that glass' applies to whole bar or just tabs? 
+     User said 'no need of that glass in nav tabs'. 
+     I will keep bar glass but ensure tabs are distinct or flat. */
+  backdrop-filter: blur(10px);
+  /* ... Actually, 'overall nav bar is hding something behind' implies transparency issues or size.
+     Safe bet: Solid background for bar to prevent weird transparency overlap issues, or better padding. */
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  /* Top flat, bottom rounded */
+  top: 0;
+  /* Align to top to avoid floating gap issue */
   z-index: 1000;
   padding: var(--spacing-xs) var(--spacing-lg);
   box-shadow: var(--glass-shadow);

@@ -1,5 +1,7 @@
 .dashboard-container {
   padding-bottom: 4rem;
+  padding-top: 6rem;
+  /* Add space for Fixed Top Navbar */
   max-width: none;
   /* FORCE FULL WIDTH */
   width: 100%;
