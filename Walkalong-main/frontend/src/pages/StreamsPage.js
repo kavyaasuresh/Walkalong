@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, BookOpen, Target, Clock, BarChart3 } from 'lucide-react';
-import { streamsAPI } from '../services/api';
+import { Plus, Trash2, TrendingUp, Clock, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { streamsAPI, todoAPI } from '../services/api'; // Assuming stream stats might come from tasks
 import './StreamsPage.css';
 
 const StreamsPage = () => {
   const [streams, setStreams] = useState([]);
   const [newStreamName, setNewStreamName] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchStreams();
@@ -17,49 +19,44 @@ const StreamsPage = () => {
     try {
       setLoading(true);
       const response = await streamsAPI.getAllStreams();
-      setStreams(response.data);
+      setStreams(response.data || []);
     } catch (err) {
-      setError('Failed to load streams');
       console.error('Failed to fetch streams:', err);
+      setError('Failed to load streams. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const createStream = async () => {
+  const addStream = async (e) => {
+    e.preventDefault();
     if (!newStreamName.trim()) return;
-    
+
     try {
       const response = await streamsAPI.createStream({ name: newStreamName });
       setStreams([...streams, response.data]);
       setNewStreamName('');
     } catch (err) {
-      setError('Failed to create stream');
-      console.error('Failed to create stream:', err);
+      console.error('Failed to add stream:', err);
+      setError('Failed to create stream.');
     }
   };
 
-  const deleteStream = async (id) => {
+  const deleteStream = async (e, id) => {
+    e.stopPropagation(); // Prevent navigation when clicking delete
     if (!window.confirm('Are you sure you want to delete this stream?')) return;
-    
+
     try {
       await streamsAPI.deleteStream(id);
       setStreams(streams.filter(stream => stream.id !== id));
     } catch (err) {
-      setError('Failed to delete stream');
       console.error('Failed to delete stream:', err);
+      setError('Failed to delete stream.');
     }
   };
 
-  const getStreamStats = (stream) => {
-    const tasks = stream.tasks || [];
-    const completed = tasks.filter(task => task.status === 'COMPLETED').length;
-    const total = tasks.length;
-    const totalPoints = tasks
-      .filter(task => task.status === 'COMPLETED')
-      .reduce((sum, task) => sum + (task.points || 0), 0);
-    
-    return { completed, total, totalPoints };
+  const handleStreamClick = (id) => {
+    navigate(`/streams/${id}`);
   };
 
   if (loading) return <div className="loading">Loading streams...</div>;
@@ -68,119 +65,84 @@ const StreamsPage = () => {
     <div className="streams-page">
       <div className="streams-container">
         <div className="streams-header">
-          <h1>Learning Streams</h1>
-          <p>Organize your learning into focused streams</p>
+          <h1>My Streams</h1>
+          <p>Organize your life into focused areas</p>
         </div>
 
         {error && <div className="error-message">{error}</div>}
 
-        {/* Add New Stream */}
         <div className="add-stream-section">
-          <div className="add-stream-form">
+          <form className="add-stream-form" onSubmit={addStream}>
             <input
               type="text"
-              placeholder="Enter stream name (e.g., UPSC, DSA, React)"
+              placeholder="New Stream Name (e.g., Learning React)"
               value={newStreamName}
               onChange={(e) => setNewStreamName(e.target.value)}
               className="stream-input"
-              onKeyPress={(e) => e.key === 'Enter' && createStream()}
             />
-            <button onClick={createStream} className="add-btn">
+            <button type="submit" className="add-btn">
               <Plus size={20} />
-              Add Stream
+              Create Stream
             </button>
-          </div>
+          </form>
         </div>
 
-        {/* Streams Grid */}
         <div className="streams-grid">
           {streams.length === 0 ? (
             <div className="empty-state">
-              <BookOpen size={48} />
               <h3>No streams yet</h3>
-              <p>Create your first learning stream to get started!</p>
+              <p>Create your first stream to start tracking specific goals.</p>
             </div>
           ) : (
-            streams.map(stream => {
-              const stats = getStreamStats(stream);
-              return (
-                <div key={stream.id} className="stream-card">
-                  <div className="stream-header">
-                    <div className="stream-icon">
-                      <BookOpen size={24} />
-                    </div>
-                    <h3 className="stream-name">{stream.name}</h3>
-                    <button
-                      onClick={() => deleteStream(stream.id)}
-                      className="delete-btn"
-                      title="Delete stream"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+            streams.map(stream => (
+              <div
+                key={stream.id}
+                className="stream-card"
+                onClick={() => handleStreamClick(stream.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="stream-header">
+                  <div className="stream-icon">
+                    <TrendingUp size={24} />
                   </div>
+                  <h3 className="stream-name">{stream.name}</h3>
+                  <button
+                    onClick={(e) => deleteStream(e, stream.id)}
+                    className="delete-btn"
+                    title="Delete Stream"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
 
-                  <div className="stream-stats">
-                    <div className="stat-item">
-                      <Target className="stat-icon" />
-                      <div className="stat-content">
-                        <span className="stat-value">{stats.completed}/{stats.total}</span>
-                        <span className="stat-label">Tasks</span>
-                      </div>
-                    </div>
-
-                    <div className="stat-item">
-                      <BarChart3 className="stat-icon" />
-                      <div className="stat-content">
-                        <span className="stat-value">{stats.totalPoints}</span>
-                        <span className="stat-label">Points</span>
-                      </div>
-                    </div>
-
-                    <div className="stat-item">
-                      <Clock className="stat-icon" />
-                      <div className="stat-content">
-                        <span className="stat-value">
-                          {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
-                        </span>
-                        <span className="stat-label">Complete</span>
-                      </div>
+                <div className="stream-stats">
+                  <div className="stat-item">
+                    <Clock className="stat-icon" />
+                    <div className="stat-content">
+                      <span className="stat-value">--</span>
+                      <span className="stat-label">Hours</span>
                     </div>
                   </div>
-
-                  <div className="stream-progress">
-                    <div className="progress-bar">
-                      <div 
-                        className="progress-fill"
-                        style={{ 
-                          width: `${stats.total > 0 ? (stats.completed / stats.total) * 100 : 0}%` 
-                        }}
-                      ></div>
+                  <div className="stat-item">
+                    <CheckCircle className="stat-icon" />
+                    <div className="stat-content">
+                      <span className="stat-value">--</span>
+                      <span className="stat-label">Tasks</span>
                     </div>
-                  </div>
-
-                  <div className="stream-tasks-preview">
-                    <h4>Recent Tasks</h4>
-                    {stream.tasks && stream.tasks.length > 0 ? (
-                      <div className="tasks-preview">
-                        {stream.tasks.slice(0, 3).map(task => (
-                          <div key={task.id} className={`task-preview ${task.status.toLowerCase()}`}>
-                            <span className="task-title">{task.title}</span>
-                            <span className="task-status">{task.status}</span>
-                          </div>
-                        ))}
-                        {stream.tasks.length > 3 && (
-                          <div className="more-tasks">
-                            +{stream.tasks.length - 3} more tasks
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="no-tasks">No tasks yet</p>
-                    )}
                   </div>
                 </div>
-              );
-            })
+
+                <div className="stream-progress">
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: '0%' }}></div>
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--accent-primary)', marginTop: '10px' }}>
+                  Click to view details & sticky notes
+                </div>
+              </div>
+            ))
           )}
         </div>
       </div>

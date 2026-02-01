@@ -7,9 +7,12 @@
 .main-content {
   flex: 1;
   padding: var(--spacing-lg);
-  max-width: 1400px;
-  margin: 0 auto;
   width: 100%;
+  margin: 0;
+  max-width: none;
+  min-height: 0;
+  /* logic for flex child */
+  overflow-x: hidden;
 }
 
 /* Glassmorphism Card Utilities */

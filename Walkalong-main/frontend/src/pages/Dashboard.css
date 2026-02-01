@@ -28,11 +28,39 @@
   margin-top: var(--spacing-xs);
 }
 
-/* Grid Layouts */
+/* Dashboard Main Grid */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--spacing-lg);
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: var(--spacing-xl);
+}
+
+.stream-analytics-card {
+  grid-row: span 1;
+}
+
+.stream-select {
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.stream-select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Chart Cards */
+.chart-card {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
 }
 
 .analytics-section {

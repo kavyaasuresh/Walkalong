@@ -8,6 +8,7 @@ import StreamsPage from './pages/StreamsPage';
 import TasksPage from './pages/TasksPage';
 import ViewPlanPage from './pages/ViewPlanPage';
 import MoodPage from './pages/MoodPage';
+import StreamDetail from './pages/StreamDetail';
 import './App.css';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/viewplan" element={<ViewPlanPage />} />
             <Route path="/mood" element={<MoodPage />} />
+            <Route path="/streams/:id" element={<StreamDetail />} />
           </Routes>
         </main>
       </div>
