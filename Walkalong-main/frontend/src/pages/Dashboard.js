@@ -235,8 +235,8 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* 2. Points Earned (Clickable) */}
-      <section className="dashboard-section">
+      {/* 2. Satisfaction & Points Row */}
+      <div className="two-column-grid">
         <div className="glass-card points-hero-card" onClick={() => setShowPointsModal(true)}>
           <div className="points-content">
             <Trophy size={48} className="trophy-icon" />
@@ -244,13 +244,23 @@ const Dashboard = () => {
               <span className="points-value">{pointsData.totalPoints}</span>
               <span className="points-label">Total Karma Points</span>
             </div>
-            <div className="points-weekly">
-              <span>+{pointsData.weeklyPoints} this week</span>
-            </div>
           </div>
           <div className="card-instruction">Click for breakdown</div>
         </div>
-      </section>
+
+        <div className="glass-card">
+          <h3>Recent Satisfaction</h3>
+          <div className="satisfaction-meter" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '10px' }}>
+            <span style={{ fontSize: '3rem', fontWeight: 'bold', color: '#f59e0b' }}>4.2</span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex' }}>
+                {[1, 2, 3, 4, 5].map(s => <Star key={s} size={20} fill={s <= 4 ? "#f59e0b" : "none"} stroke="#f59e0b" />)}
+              </div>
+              <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Average from last 7 entries</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Points Modal */}
       {showPointsModal && (
@@ -309,91 +319,92 @@ const Dashboard = () => {
             </ResponsiveContainer>
           </div>
         </section>
-
-        {/* 4. Active Days Analysis & Histogram */}
-        <div className="two-column-grid">
-          <section className="glass-card">
-            <h3>Active Streak</h3>
-            <div className="activity-heatmap">
-              {activityData.map((day, idx) => (
-                <div key={idx} className="day-column">
-                  <div
-                    className="day-bar"
-                    style={{
-                      height: `${Math.min(day.count * 20, 100)}%`,
-                      opacity: day.count > 0 ? 1 : 0.2
-                    }}
-                  ></div>
-                  <span className="day-label">{day.day}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="glass-card">
-            <h3>Daily Involvement (Tasks)</h3>
-            <div style={{ width: '100%', height: 200 }}>
-              <ResponsiveContainer>
-                <BarChart data={activityData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
-                  <XAxis dataKey="day" stroke="#94a3b8" />
-                  <YAxis stroke="#94a3b8" />
-                  <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ backgroundColor: '#1e1e2e', borderRadius: '8px', border: 'none' }} />
-                  <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} barSize={30} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </section>
-        </div>
-
-        {/* 5. Study Hours Bar Chart */}
-        <section className="dashboard-section">
-          <div className="glass-card">
-            <h3>Focus Hours</h3>
-            <div style={{ width: '100%', height: 250 }}>
-              <ResponsiveContainer>
-                <BarChart data={studyHours}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
-                  <XAxis dataKey="name" stroke="#94a3b8" />
-                  <YAxis stroke="#94a3b8" />
-                  <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ backgroundColor: '#1e1e2e', borderRadius: '8px', border: 'none' }} />
-                  <Bar dataKey="hours" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </section>
-
-        {/* 6. All Streams Comparison */}
-        <section className="dashboard-section last-section">
-          <div className="glass-card">
-            <h3>Stream Comparison (Daily Performance)</h3>
-            <div className="stream-comparison-list">
-              {streamAnalytics.length === 0 ? <p className="text-muted">No data for this day.</p> : (
-                streamAnalytics.map((s, idx) => (
-                  <div key={s.id} className="comparison-row">
-                    <div className="row-info">
-                      <span className="row-name">{s.name}</span>
-                      <span className="row-val">{s.completed}/{s.total} Tasks</span>
-                    </div>
-                    <div className="row-track">
-                      <div
-                        className="row-fill"
-                        style={{
-                          width: `${s.percentage}%`,
-                          backgroundColor: COLORS[idx % COLORS.length]
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </section>
-
       </div>
-      );
+
+      {/* 4. Active Days Analysis & Histogram */}
+      <div className="two-column-grid">
+        <section className="glass-card">
+          <h3>Active Streak</h3>
+          <div className="activity-heatmap">
+            {activityData.map((day, idx) => (
+              <div key={idx} className="day-column">
+                <div
+                  className="day-bar"
+                  style={{
+                    height: `${Math.min(day.count * 20, 100)}%`,
+                    opacity: day.count > 0 ? 1 : 0.2
+                  }}
+                ></div>
+                <span className="day-label">{day.day}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="glass-card">
+          <h3>Daily Involvement (Tasks)</h3>
+          <div style={{ width: '100%', height: 200 }}>
+            <ResponsiveContainer>
+              <BarChart data={activityData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
+                <XAxis dataKey="day" stroke="#94a3b8" />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ backgroundColor: '#1e1e2e', borderRadius: '8px', border: 'none' }} />
+                <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} barSize={30} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+      </div>
+
+      {/* 5. Study Hours Bar Chart */}
+      <section className="dashboard-section">
+        <div className="glass-card">
+          <h3>Focus Hours</h3>
+          <div style={{ width: '100%', height: 250 }}>
+            <ResponsiveContainer>
+              <BarChart data={studyHours}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
+                <XAxis dataKey="name" stroke="#94a3b8" />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ backgroundColor: '#1e1e2e', borderRadius: '8px', border: 'none' }} />
+                <Bar dataKey="hours" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. All Streams Comparison */}
+      <section className="dashboard-section last-section">
+        <div className="glass-card">
+          <h3>Stream Comparison (Daily Performance)</h3>
+          <div className="stream-comparison-list">
+            {streamAnalytics.length === 0 ? <p className="text-muted">No data for this day.</p> : (
+              streamAnalytics.map((s, idx) => (
+                <div key={s.id} className="comparison-row">
+                  <div className="row-info">
+                    <span className="row-name">{s.name}</span>
+                    <span className="row-val">{s.completed}/{s.total} Tasks</span>
+                  </div>
+                  <div className="row-track">
+                    <div
+                      className="row-fill"
+                      style={{
+                        width: `${s.percentage}%`,
+                        backgroundColor: COLORS[idx % COLORS.length]
+                      }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+
+    </div>
+  );
 };
 
-      export default Dashboard;
+export default Dashboard;
