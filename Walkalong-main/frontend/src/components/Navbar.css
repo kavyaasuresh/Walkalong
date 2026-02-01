@@ -3,8 +3,10 @@
   top: var(--spacing-md);
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - var(--spacing-xl) * 2);
-  max-width: 1200px;
+  width: 95%;
+  /* Use percentage instead of fixed calculation */
+  max-width: none;
+  /* Allow it to grow */
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);

@@ -61,6 +61,15 @@ body {
   min-height: 100vh;
   width: 100vw;
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 code {
