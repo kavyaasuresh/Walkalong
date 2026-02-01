@@ -91,7 +91,7 @@ const Dashboard = () => {
 
 
       // 2. Points
-      const pts = pointsRes.data || { totalPoints: 1540, weeklyPoints: 320, breakdown: [] };
+      const pts = pointsRes.data || { totalPoints: 0, weeklyPoints: 0, breakdown: [] };
       setPointsData(pts);
 
       // 3. Streams & Tasks Data
@@ -170,8 +170,8 @@ const Dashboard = () => {
 
   const generateStudyStats = (allTasks) => {
     return [
-      { name: 'Mon', hours: 2 }, { name: 'Tue', hours: 4.5 }, { name: 'Wed', hours: 3 },
-      { name: 'Thu', hours: 6 }, { name: 'Fri', hours: 4 }, { name: 'Sat', hours: 7 }, { name: 'Sun', hours: 1 }
+      { name: 'Mon', hours: 0 }, { name: 'Tue', hours: 0 }, { name: 'Wed', hours: 0 },
+      { name: 'Thu', hours: 0 }, { name: 'Fri', hours: 0 }, { name: 'Sat', hours: 0 }, { name: 'Sun', hours: 0 }
     ];
   };
 

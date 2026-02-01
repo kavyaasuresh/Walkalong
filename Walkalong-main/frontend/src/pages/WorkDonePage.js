@@ -4,8 +4,15 @@ import { workDoneAPI, streamsAPI } from '../services/api';
 import './WorkDonePage.css';
 
 const WorkDonePage = () => {
-  const [entries, setEntries] = useState([]);
-  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [currentEntry, setCurrentEntry] = useState({
+    items: [],
+    satisfactionLevel: 3,
+    notes: '',
+    totalPoints: 0
+  });
+  const [recentEntries, setRecentEntries] = useState([]);
+  const [streams, setStreams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);

@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Play, Upload, Quote, RefreshCw, Film, PlusCircle } from 'lucide-react';
 import './MotivationPage.css';
 
