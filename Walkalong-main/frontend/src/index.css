@@ -17,16 +17,12 @@
   --accent-warning: #f59e0b;
   --accent-error: #ef4444;
 
-  /* Glassmorphism */
-  --glass-bg: rgba(30, 41, 59, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  /* Glassmorphism System */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
   --glass-highlight: rgba(255, 255, 255, 0.12);
-  /* Kept from original, not explicitly removed by instruction */
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
-  /* Kept from original, not explicitly removed by instruction */
   --glass-blur: blur(12px);
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
 
   /* Spacing */
   --spacing-xs: 0.5rem;
