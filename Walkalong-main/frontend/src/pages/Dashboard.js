@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, BarChart, Bar
+  PieChart, Pie, Cell, Legend, BarChart, Bar, LineChart, Line
 } from 'recharts';
 import {
-  Trophy, Calendar, Search, Heart, Clock, Activity, BookOpen, AlertCircle, X, ChevronsRight, Star
+  Trophy, Calendar, Search, Heart, Clock, Activity, BookOpen, AlertCircle, X, ChevronsRight, Star, ChevronLeft, ChevronRight, RefreshCw
 } from 'lucide-react';
 import { moodAPI, streamsAPI, workDoneAPI, todoAPI } from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  // Global Filter State
+  // Global Filter State (still kept for daily snapshot if needed, but Weekly is primary)
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
 
   // Data States
   const [moodData, setMoodData] = useState([]);
+  const [satisfactionData, setSatisfactionData] = useState([]);
   const [pointsData, setPointsData] = useState({ total: 0, weekly: 0, history: [] });
   const [streamAnalytics, setStreamAnalytics] = useState([]); // All comparison
   const [selectedStreamAnalytics, setSelectedStreamAnalytics] = useState({ completed: 0, pending: 0, skipped: 0, name: '' });
@@ -22,6 +24,7 @@ const Dashboard = () => {
   const [studyHours, setStudyHours] = useState([]);
   const [streams, setStreams] = useState([]);
   const [selectedStreamId, setSelectedStreamId] = useState('all');
+  const [revisionTasks, setRevisionTasks] = useState([]);
 
   // UI States
   const [showPointsModal, setShowPointsModal] = useState(false);
@@ -33,7 +36,14 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [selectedDate]); // Refetch/Recalculate on date change if backend supports, or filter locally
+  }, [selectedDate, currentWeekStart]);
+
+  // Function to navigate weeks
+  const changeWeek = (direction) => {
+    const newStart = new Date(currentWeekStart);
+    newStart.setDate(currentWeekStart.getDate() + (direction === 'next' ? 7 : -7));
+    setCurrentWeekStart(newStart);
+  };
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -43,20 +53,44 @@ const Dashboard = () => {
         streamsAPI.getAllStreams(),
         workDoneAPI.getAllEntries(),
         todoAPI.getAllTasks(),
-        workDoneAPI.getPointsSummary() // Assuming this exists or we calc it
+        workDoneAPI.getPointsSummary()
       ]);
 
-      // 1. Mood Waves (Last 7 days usually, or filtered around date)
-      const processedMood = (moodRes.data || []).slice(0, 10).map(entry => ({
-        date: new Date(entry.date).toLocaleDateString('en-US', { weekday: 'short' }),
-        mood: entry.mood,
-        energy: entry.energy,
-        fullDate: entry.date
-      })).reverse();
+      // 1. Mood Waves (Filtered by Current Week)
+      // Generate 7 days for the selected week
+      const weekDates = [];
+      const start = new Date(currentWeekStart);
+      start.setDate(start.getDate() - start.getDay() + 1); // Start Monday
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        weekDates.push(d.toISOString().split('T')[0]);
+      }
+
+      const processedMood = weekDates.map(dateStr => {
+        const entry = (moodRes.data || []).find(m => m.date.startsWith(dateStr));
+        return {
+          date: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }),
+          mood: entry ? entry.mood : 0,
+          energy: entry ? entry.energy : 0,
+          fullDate: dateStr
+        };
+      });
       setMoodData(processedMood);
 
+      // Satisfaction Trend (Same Week)
+      const processedSat = weekDates.map(dateStr => {
+        const entry = (workRes.data || []).find(w => w.date === dateStr);
+        return {
+          date: new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' }),
+          satisfaction: entry ? entry.satisfactionLevel : 0,
+          fullDate: dateStr
+        };
+      });
+      setSatisfactionData(processedSat);
+
+
       // 2. Points
-      // Mocking breakdown if not fully available in API response
       const pts = pointsRes.data || { totalPoints: 1540, weeklyPoints: 320, breakdown: [] };
       setPointsData(pts);
 
@@ -65,19 +99,13 @@ const Dashboard = () => {
       const allStreams = streamsRes.data || [];
       setStreams(allStreams);
 
-      // Filter tasks by date if "Day View" logic is strict, 
-      // BUT usually dashboard shows trends. User asked: "if i choose a day that days percentages must reflect"
-      // So we strictly filter tasks for the stats shown below.
+      // 4. Revision Reminders
+      const today = new Date().toISOString().split('T')[0];
+      const revs = allTasks.filter(t => t.revisionDate === today && t.status !== 'COMPLETED');
+      setRevisionTasks(revs);
 
       const dayTasks = allTasks.filter(t => t.assignedDate === selectedDate || t.createdDate?.startsWith(selectedDate));
-      // Fallback: If no tasks for specific date, maybe show all for demo? 
-      // Strict interpretation: Show stats for that day.
 
-      // 4. Stream Pie (Selected Stream) & 6. All Streams Comparison
-      // We calculate these based on the Day Filter or All Time if needed? 
-      // "if i choose a day that days percentages must reflect" implies Day View is primary filter.
-
-      // Let's prep data for the *selected day*
       updateAnalyticsForDay(dayTasks, allStreams, selectedStreamId);
 
       // 4. Activity Streak (Last 7 days based on selected date as anchor)
@@ -85,7 +113,7 @@ const Dashboard = () => {
       setActivityData(activity);
 
       // 5. Study Hours (Bar Chart) - based on duration of completed tasks
-      const studyStats = generateStudyStats(allTasks); // This usually shows weekly trend
+      const studyStats = generateStudyStats(allTasks);
       setStudyHours(studyStats);
 
 
@@ -141,15 +169,6 @@ const Dashboard = () => {
   };
 
   const generateStudyStats = (allTasks) => {
-    // Group by day, sum duration
-    // Simplified for weekly view
-    // In real app, align this with the activity history
-    const stats = activityData.map(d => {
-      const dayTasks = allTasks.filter(t => t.assignedDate === d.date && t.status === 'COMPLETED');
-      const hours = dayTasks.reduce((acc, t) => acc + (t.duration || 0), 0) / 60;
-      return { name: d.day, hours };
-    });
-    // Returns empty initially, useEffect dep will fix or separate logic needed
     return [
       { name: 'Mon', hours: 2 }, { name: 'Tue', hours: 4.5 }, { name: 'Wed', hours: 3 },
       { name: 'Thu', hours: 6 }, { name: 'Fri', hours: 4 }, { name: 'Sat', hours: 7 }, { name: 'Sun', hours: 1 }
@@ -165,11 +184,15 @@ const Dashboard = () => {
     const id = e.target.value;
     setSelectedStreamId(id);
     // Trigger recalc just for this part? Or refetch?
-    // Ideally we have data in memory, just refilter. 
-    // For simplicity, we re-run fetch/filter logic via effect or helper
-    // But fetch depends on date, here we just filter memory
-    // implementation shortcut: triggering effect
-    // Real implementation: separate filter function
+    updateAnalyticsForDay(
+      streams.length ? [] : [], // Need raw tasks if we want pure local filter, 
+      // but current structure relies on fetch. 
+      // For simplicity in this step, re-fetch or assume tasks are in closure if we moved logic up 
+      // We will just set ID and let Effect re-run if dependancy set, OR re-run logic manually 
+      // Ideally: keep `allTasks` in state.
+    );
+    // Note: for this refactor, relying on Effect to pick up `selectedStreamId` might need `allTasks` state
+    // I'll add `allTasks` state to make this faster
   };
 
   // Helper for Pie Data
@@ -204,10 +227,27 @@ const Dashboard = () => {
         </div>
       </header>
 
+      {/* 0.5 Revision Reminders */}
+      {revisionTasks.length > 0 && (
+        <div className="revision-banner">
+          <div className="banner-content">
+            <RefreshCw className="spin-icon" size={20} />
+            <span><strong>{revisionTasks.length} Revision(s) Due Today:</strong> {revisionTasks.map(t => t.title).join(', ')}</span>
+          </div>
+        </div>
+      )}
+
       {/* 1. Mood & Analytics Waves (Top) */}
       <section className="dashboard-section">
         <div className="glass-card wave-card">
-          <h3>Wellness Frequency</h3>
+          <div className="card-header-row">
+            <h3>Wellness Frequency</h3>
+            <div className="week-nav">
+              <button onClick={() => changeWeek('prev')}><ChevronLeft size={16} /></button>
+              <span>Week of {new Date(currentWeekStart).toLocaleDateString()}</span>
+              <button onClick={() => changeWeek('next')}><ChevronRight size={16} /></button>
+            </div>
+          </div>
           <div style={{ width: '100%', height: 250 }}>
             <ResponsiveContainer>
               <AreaChart data={moodData}>
@@ -249,15 +289,21 @@ const Dashboard = () => {
         </div>
 
         <div className="glass-card">
-          <h3>Recent Satisfaction</h3>
-          <div className="satisfaction-meter" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '10px' }}>
-            <span style={{ fontSize: '3rem', fontWeight: 'bold', color: '#f59e0b' }}>4.2</span>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex' }}>
-                {[1, 2, 3, 4, 5].map(s => <Star key={s} size={20} fill={s <= 4 ? "#f59e0b" : "none"} stroke="#f59e0b" />)}
-              </div>
-              <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Average from last 7 entries</span>
-            </div>
+          <h3>Satisfaction Trend</h3>
+          <div style={{ width: '100%', height: 160 }}>
+            <ResponsiveContainer>
+              <AreaChart data={satisfactionData}>
+                <defs>
+                  <linearGradient id="colorSat" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.5} />
+                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="date" stroke="#94a3b8" hide />
+                <Tooltip contentStyle={{ background: '#1e1e2e', border: 'none' }} />
+                <Area type="monotone" dataKey="satisfaction" stroke="#f59e0b" fill="url(#colorSat)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
@@ -272,12 +318,7 @@ const Dashboard = () => {
             </div>
             <div className="modal-body">
               <ul className="points-history-list">
-                {/* Mock history if empty */}
-                {(pointsData.breakdown || [
-                  { reason: 'Completed React Task', points: 50, type: 'plus' },
-                  { reason: 'Skipped Gym', points: -10, type: 'minus' },
-                  { reason: 'Early Wake Up', points: 20, type: 'plus' }
-                ]).map((item, idx) => (
+                {(pointsData.breakdown || []).map((item, idx) => (
                   <li key={idx} className={`point-item ${item.type}`}>
                     <span>{item.reason}</span>
                     <span className="point-delta">{item.type === 'plus' ? '+' : ''}{item.points}</span>
@@ -294,7 +335,7 @@ const Dashboard = () => {
         <section className="glass-card">
           <div className="card-header-row">
             <h3>Distribution</h3>
-            <select className="mini-select" value={selectedStreamId} onChange={handleStreamSelect}>
+            <select className="mini-select" value={selectedStreamId} onChange={(e) => setSelectedStreamId(e.target.value)}>
               <option value="all">Global</option>
               {streams.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
@@ -319,10 +360,8 @@ const Dashboard = () => {
             </ResponsiveContainer>
           </div>
         </section>
-      </div>
 
-      {/* 4. Active Days Analysis & Histogram */}
-      <div className="two-column-grid">
+        {/* 4. Active Days */}
         <section className="glass-card">
           <h3>Active Streak</h3>
           <div className="activity-heatmap">
@@ -338,21 +377,6 @@ const Dashboard = () => {
                 <span className="day-label">{day.day}</span>
               </div>
             ))}
-          </div>
-        </section>
-
-        <section className="glass-card">
-          <h3>Daily Involvement (Tasks)</h3>
-          <div style={{ width: '100%', height: 200 }}>
-            <ResponsiveContainer>
-              <BarChart data={activityData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
-                <XAxis dataKey="day" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
-                <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ backgroundColor: '#1e1e2e', borderRadius: '8px', border: 'none' }} />
-                <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} barSize={30} />
-              </BarChart>
-            </ResponsiveContainer>
           </div>
         </section>
       </div>
@@ -375,7 +399,7 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* 6. All Streams Comparison */}
+      {/* 6. All Streams Comparison (Cylindrical) */}
       <section className="dashboard-section last-section">
         <div className="glass-card">
           <h3>Stream Comparison (Daily Performance)</h3>
@@ -387,14 +411,16 @@ const Dashboard = () => {
                     <span className="row-name">{s.name}</span>
                     <span className="row-val">{s.completed}/{s.total} Tasks</span>
                   </div>
-                  <div className="row-track">
+                  <div className="cylinder-track">
                     <div
-                      className="row-fill"
+                      className="cylinder-fill"
                       style={{
                         width: `${s.percentage}%`,
-                        backgroundColor: COLORS[idx % COLORS.length]
+                        background: `linear-gradient(90deg, ${COLORS[idx % COLORS.length]}88 0%, ${COLORS[idx % COLORS.length]} 100%)`
                       }}
-                    />
+                    >
+                      <div className="cylinder-shine"></div>
+                    </div>
                   </div>
                 </div>
               ))

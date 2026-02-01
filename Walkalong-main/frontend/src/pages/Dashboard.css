@@ -78,6 +78,24 @@
   padding: 1.5rem;
 }
 
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 12px;
+  border-radius: 2rem;
+}
+
+.week-nav button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
 .points-hero-card {
   padding: 2rem;
   display: flex;
@@ -124,18 +142,61 @@
   color: var(--text-tertiary);
 }
 
-.points-weekly {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.5rem 1rem;
-  border-radius: 1rem;
-  font-weight: 600;
-  color: var(--accent-success);
+/* Revision Banner */
+.revision-banner {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  color: var(--accent-warning);
+  display: flex;
+  align-items: center;
 }
 
-.card-instruction {
-  font-size: 0.8rem;
-  color: var(--text-tertiary);
-  opacity: 0.6;
+.banner-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.spin-icon {
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Cylinder Progress Bars */
+.cylinder-track {
+  height: 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cylinder-fill {
+  height: 100%;
+  border-radius: 10px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cylinder-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4) 0%, transparent 100%);
+  border-radius: 10px 10px 0 0;
 }
 
 /* Activity Heatmap */
@@ -195,17 +256,6 @@
   color: var(--text-secondary);
 }
 
-.row-track {
-  height: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.row-fill {
-  height: 100%;
-  border-radius: 4px;
-}
 
 .last-section {
   margin-bottom: 0;
