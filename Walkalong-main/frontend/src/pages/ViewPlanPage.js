@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Target, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, Target, BarChart3, ChevronLeft, ChevronRight, Layers, LayoutGrid, List } from 'lucide-react';
 import { viewPlanAPI } from '../services/api';
 import './ViewPlanPage.css';
 
@@ -23,18 +23,24 @@ const ViewPlanPage = () => {
   const fetchAllPlans = async () => {
     try {
       setLoading(true);
+      // In a real app, these would utilize the date parameters.
+      // For this refactor, we are keeping logic similar to existing but ensuring robustness
       const [dailyResponse, weeklyResponse, monthlyResponse] = await Promise.all([
         viewPlanAPI.getDailyPlan(dates.daily),
         viewPlanAPI.getWeeklyPlan(dates.weekly),
         viewPlanAPI.getMonthlyPlan(dates.monthly)
       ]);
-      
-      setDailyTasks(dailyResponse.data);
-      setWeeklyTasks(weeklyResponse.data);
-      setMonthlyTasks(monthlyResponse.data);
+
+      setDailyTasks(dailyResponse.data || []);
+      setWeeklyTasks(weeklyResponse.data || []);
+      setMonthlyTasks(monthlyResponse.data || []);
     } catch (err) {
       setError('Failed to load plans');
       console.error('Failed to fetch plans:', err);
+      // Fallback
+      setDailyTasks([]);
+      setWeeklyTasks([]);
+      setMonthlyTasks([]);
     } finally {
       setLoading(false);
     }
@@ -43,7 +49,7 @@ const ViewPlanPage = () => {
   const updateDate = (type, direction) => {
     const currentDate = new Date(dates[type]);
     let newDate;
-    
+
     if (type === 'daily') {
       newDate = new Date(currentDate);
       newDate.setDate(currentDate.getDate() + (direction === 'next' ? 1 : -1));
@@ -54,7 +60,7 @@ const ViewPlanPage = () => {
       newDate = new Date(currentDate);
       newDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 1 : -1));
     }
-    
+
     setDates({
       ...dates,
       [type]: newDate.toISOString().split('T')[0]
@@ -64,11 +70,10 @@ const ViewPlanPage = () => {
   const formatDate = (dateString, type) => {
     const date = new Date(dateString);
     if (type === 'daily') {
-      return date.toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric'
       });
     } else if (type === 'weekly') {
       const weekStart = new Date(date);
@@ -87,14 +92,14 @@ const ViewPlanPage = () => {
       .filter(task => task.status === 'COMPLETED')
       .reduce((sum, task) => sum + (task.points || 0), 0);
     const totalDuration = tasks.reduce((sum, task) => sum + (task.duration || 0), 0);
-    
+
     return { completed, total, totalPoints, totalDuration };
   };
 
   const groupTasksByStream = (tasks) => {
     const grouped = {};
     tasks.forEach(task => {
-      const streamName = task.stream?.name || 'No Stream';
+      const streamName = task.stream?.name || 'Uncategorized';
       if (!grouped[streamName]) {
         grouped[streamName] = [];
       }
@@ -105,9 +110,8 @@ const ViewPlanPage = () => {
 
   const renderTaskList = (tasks, type, title) => {
     const stats = getTaskStats(tasks);
-    
+
     if (viewMode === 'time') {
-      // Time-based view (original)
       return (
         <div className="plan-section">
           <div className="plan-header">
@@ -124,9 +128,9 @@ const ViewPlanPage = () => {
               </div>
             </div>
             <div className="plan-stats">
-              <div className="stat"><Target size={16} /><span>{stats.completed}/{stats.total}</span></div>
-              <div className="stat"><Clock size={16} /><span>{stats.totalDuration}min</span></div>
-              <div className="stat"><BarChart3 size={16} /><span>{stats.totalPoints}pts</span></div>
+              <div className="stat" title="Completed / Total Tasks"><Target size={14} /><span>{stats.completed}/{stats.total}</span></div>
+              <div className="stat" title="Total Duration"><Clock size={14} /><span>{stats.totalDuration}m</span></div>
+              <div className="stat" title="Total Points"><BarChart3 size={14} /><span>{stats.totalPoints}pts</span></div>
             </div>
           </div>
           <div className="tasks-container">
@@ -140,8 +144,8 @@ const ViewPlanPage = () => {
                       <h5 className="task-title">{task.title}</h5>
                       <div className="task-meta">
                         {task.stream && <span className="task-stream">{task.stream.name}</span>}
-                        <span className="task-duration">{task.duration}min</span>
-                        <span className="task-points">{task.points}pts</span>
+                        <span className="task-duration"><Clock size={12} /> {task.duration}m</span>
+                        <span className="task-points"><Target size={12} /> {task.points}pts</span>
                       </div>
                     </div>
                     <div className="task-status">
@@ -155,34 +159,38 @@ const ViewPlanPage = () => {
         </div>
       );
     } else if (viewMode === 'stream') {
-      // Stream-based view
-      const groupedTasks = groupTasksByStream(tasks);
-      return (
-        <div className="plan-section stream-view">
-          <div className="plan-header">
-            <h3>{title}</h3>
-            <div className="date-navigation">
-              <button onClick={() => updateDate(type, 'prev')} className="nav-btn">
-                <ChevronLeft size={16} />
-              </button>
-              <span className="current-date">{formatDate(dates[type], type)}</span>
-              <button onClick={() => updateDate(type, 'next')} className="nav-btn">
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-          <div className="tasks-container">
-            {Object.entries(groupedTasks).map(([streamName, streamTasks]) => (
+      // Stream view implementation within specific logic if called directly
+      // But for unified view, handled below
+      return null;
+    }
+  };
+
+  // Helper for Unified/Stream views
+  const renderUnifiedView = () => {
+    const allTasks = [...dailyTasks, ...weeklyTasks, ...monthlyTasks];
+    const groupedTasks = groupTasksByStream(allTasks);
+
+    return (
+      <div className="plan-section unified-view">
+        <div className="plan-header">
+          <h3>Consolidated View</h3>
+        </div>
+        <div className="tasks-container">
+          {Object.keys(groupedTasks).length === 0 ? (
+            <div className="no-tasks">No tasks found across any plan</div>
+          ) : (
+            Object.entries(groupedTasks).map(([streamName, streamTasks]) => (
               <div key={streamName} className="stream-group">
-                <h4 className="stream-header">{streamName}</h4>
+                <div className="stream-header">{streamName}</div>
                 <div className="tasks-list">
                   {streamTasks.map(task => (
                     <div key={task.id} className={`task-card ${task.status.toLowerCase()}`}>
                       <div className="task-info">
                         <h5 className="task-title">{task.title}</h5>
                         <div className="task-meta">
-                          <span className="task-duration">{task.duration}min</span>
-                          <span className="task-points">{task.points}pts</span>
+                          <span className="task-duration"><Clock size={12} /> {task.duration}m</span>
+                          <span className="task-points"><Target size={12} /> {task.points}pts</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginLeft: '8px' }}>({task.type})</span>
                         </div>
                       </div>
                       <div className="task-status">
@@ -192,56 +200,11 @@ const ViewPlanPage = () => {
                   ))}
                 </div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </div>
-      );
-    } else {
-      // Mixed view: Stream as header, then time subheadings
-      const groupedTasks = groupTasksByStream(tasks);
-      return (
-        <div className="plan-section mixed-view">
-          <div className="plan-header">
-            <h3>{title}</h3>
-            <div className="date-navigation">
-              <button onClick={() => updateDate(type, 'prev')} className="nav-btn">
-                <ChevronLeft size={16} />
-              </button>
-              <span className="current-date">{formatDate(dates[type], type)}</span>
-              <button onClick={() => updateDate(type, 'next')} className="nav-btn">
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-          <div className="tasks-container">
-            {Object.entries(groupedTasks).map(([streamName, streamTasks]) => (
-              <div key={streamName} className="stream-group">
-                <h4 className="stream-header">{streamName}</h4>
-                <div className="time-subgroup">
-                  <h5 className="time-subheader">{title}</h5>
-                  <div className="tasks-list">
-                    {streamTasks.map(task => (
-                      <div key={task.id} className={`task-card ${task.status.toLowerCase()}`}>
-                        <div className="task-info">
-                          <h5 className="task-title">{task.title}</h5>
-                          <div className="task-meta">
-                            <span className="task-duration">{task.duration}min</span>
-                            <span className="task-points">{task.points}pts</span>
-                          </div>
-                        </div>
-                        <div className="task-status">
-                          <span className={`status-badge ${task.status.toLowerCase()}`}>{task.status}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
+      </div>
+    );
   };
 
   if (loading) return <div className="loading">Loading plans...</div>;
@@ -250,9 +213,9 @@ const ViewPlanPage = () => {
     <div className="view-plan-page">
       <div className="view-plan-container">
         <div className="view-plan-header">
-          <h1>View Plan</h1>
-          <p>Consolidated view of your learning schedule</p>
-          
+          <h1>Plan Overview</h1>
+          <p>Track your progress across daily, weekly, and monthly goals</p>
+
           <div className="view-controls">
             <div className="view-mode-toggle">
               <button
@@ -260,21 +223,14 @@ const ViewPlanPage = () => {
                 className={`toggle-btn ${viewMode === 'time' ? 'active' : ''}`}
               >
                 <Clock size={16} />
-                Time-based
+                Time View
               </button>
               <button
                 onClick={() => setViewMode('stream')}
                 className={`toggle-btn ${viewMode === 'stream' ? 'active' : ''}`}
               >
-                <BarChart3 size={16} />
-                Stream-based
-              </button>
-              <button
-                onClick={() => setViewMode('mixed')}
-                className={`toggle-btn ${viewMode === 'mixed' ? 'active' : ''}`}
-              >
-                <Target size={16} />
-                Mixed
+                <Layers size={16} />
+                Stream View
               </button>
             </div>
           </div>
@@ -285,26 +241,22 @@ const ViewPlanPage = () => {
         <div className="plans-grid">
           {viewMode === 'time' && (
             <>
-              {renderTaskList(dailyTasks, 'daily', 'Daily Tasks')}
-              {renderTaskList(weeklyTasks, 'weekly', 'Weekly Tasks')}
-              {renderTaskList(monthlyTasks, 'monthly', 'Monthly Tasks')}
+              {renderTaskList(dailyTasks, 'daily', 'Daily Plan')}
+              {renderTaskList(weeklyTasks, 'weekly', 'Weekly Goals')}
+              {renderTaskList(monthlyTasks, 'monthly', 'Monthly Targets')}
             </>
           )}
-          
-          {(viewMode === 'stream' || viewMode === 'mixed') && (
-            <div className="unified-view">
-              {renderTaskList([...dailyTasks, ...weeklyTasks, ...monthlyTasks], 'unified', 'All Tasks')}
-            </div>
-          )}
+
+          {viewMode === 'stream' && renderUnifiedView()}
         </div>
 
         {/* Summary Section */}
         <div className="summary-section">
-          <h3>Overall Summary</h3>
+          <h3>Total Aggregates</h3>
           <div className="summary-cards">
             <div className="summary-card">
               <div className="summary-icon">
-                <Calendar size={24} />
+                <LayoutGrid size={24} />
               </div>
               <div className="summary-content">
                 <span className="summary-value">
@@ -313,7 +265,7 @@ const ViewPlanPage = () => {
                 <span className="summary-label">Total Tasks</span>
               </div>
             </div>
-            
+
             <div className="summary-card">
               <div className="summary-icon">
                 <Target size={24} />
@@ -326,7 +278,7 @@ const ViewPlanPage = () => {
                 <span className="summary-label">Completed</span>
               </div>
             </div>
-            
+
             <div className="summary-card">
               <div className="summary-icon">
                 <Clock size={24} />
@@ -334,12 +286,12 @@ const ViewPlanPage = () => {
               <div className="summary-content">
                 <span className="summary-value">
                   {[...dailyTasks, ...weeklyTasks, ...monthlyTasks]
-                    .reduce((sum, task) => sum + (task.duration || 0), 0)}min
+                    .reduce((sum, task) => sum + (task.duration || 0), 0)}m
                 </span>
-                <span className="summary-label">Total Time</span>
+                <span className="summary-label">Time Scheduled</span>
               </div>
             </div>
-            
+
             <div className="summary-card">
               <div className="summary-icon">
                 <BarChart3 size={24} />

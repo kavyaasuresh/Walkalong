@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Check, X, Trash2, Clock, Target } from 'lucide-react';
+import { Plus, Check, X, Trash2, Clock, Target, CalendarDays, BarChart2, ListTodo } from 'lucide-react';
 import { todoAPI } from '../services/api';
 import './TodoPage.css';
 
@@ -21,6 +21,8 @@ const TodoPage = () => {
     } catch (err) {
       setError('Failed to load tasks');
       console.error('Failed to fetch tasks:', err);
+      // fallback
+      setTasks([]);
     } finally {
       setLoading(false);
     }
@@ -28,7 +30,7 @@ const TodoPage = () => {
 
   const createTask = async () => {
     if (!newTask.title.trim()) return;
-    
+
     try {
       const response = await todoAPI.createTask(newTask);
       setTasks([response.data, ...tasks]);
@@ -59,21 +61,12 @@ const TodoPage = () => {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'COMPLETED': return '#10b981';
-      case 'PENDING': return '#f59e0b';
-      case 'SKIPPED': return '#ef4444';
-      default: return '#6b7280';
-    }
-  };
-
   const getTypeIcon = (type) => {
     switch (type) {
-      case 'DAILY': return '📅';
-      case 'WEEKLY': return '📊';
-      case 'MONTHLY': return '🎯';
-      default: return '📋';
+      case 'DAILY': return <CalendarDays size={20} />;
+      case 'WEEKLY': return <BarChart2 size={20} />;
+      case 'MONTHLY': return <ListTodo size={20} />;
+      default: return <ListTodo size={20} />;
     }
   };
 
@@ -86,7 +79,7 @@ const TodoPage = () => {
     <div className="todo-page">
       <div className="todo-container">
         <div className="todo-header">
-          <h1>Todo List</h1>
+          <h1>Quick Todo</h1>
           <div className="stats">
             <div className="stat-item">
               <Target className="stat-icon" />
@@ -94,11 +87,11 @@ const TodoPage = () => {
             </div>
             <div className="stat-item">
               <Check className="stat-icon" />
-              <span>{completedTasks.length} Completed</span>
+              <span>{completedTasks.length} Done</span>
             </div>
             <div className="stat-item">
               <Clock className="stat-icon" />
-              <span>{totalPoints} Points</span>
+              <span>{totalPoints} Pts</span>
             </div>
           </div>
         </div>
@@ -110,13 +103,13 @@ const TodoPage = () => {
           <div className="add-task-form">
             <input
               type="text"
-              placeholder="What needs to be done?"
+              placeholder="Quick task..."
               value={newTask.title}
               onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
               className="task-input"
               onKeyPress={(e) => e.key === 'Enter' && createTask()}
             />
-            
+
             <select
               value={newTask.type}
               onChange={(e) => setNewTask({ ...newTask, type: e.target.value })}
@@ -126,30 +119,32 @@ const TodoPage = () => {
               <option value="WEEKLY">Weekly</option>
               <option value="MONTHLY">Monthly</option>
             </select>
-            
+
             <input
               type="number"
-              placeholder="Duration (min)"
+              placeholder="Min"
               value={newTask.duration}
               onChange={(e) => setNewTask({ ...newTask, duration: parseInt(e.target.value) })}
               className="task-duration"
               min="5"
               max="480"
+              title="Duration in minutes"
             />
-            
+
             <input
               type="number"
-              placeholder="Points"
+              placeholder="Pts"
               value={newTask.points}
               onChange={(e) => setNewTask({ ...newTask, points: parseInt(e.target.value) })}
               className="task-points"
               min="1"
               max="100"
+              title="Points"
             />
-            
+
             <button onClick={createTask} className="add-btn">
               <Plus size={20} />
-              Add Task
+              Add
             </button>
           </div>
         </div>
@@ -171,12 +166,12 @@ const TodoPage = () => {
                     <h3 className="task-title">{task.title}</h3>
                     <span className="task-type-badge">{task.type}</span>
                   </div>
-                  
+
                   <div className="task-details">
                     <div className="task-meta">
                       <span className="task-duration">
                         <Clock size={14} />
-                        {task.duration}min
+                        {task.duration}m
                       </span>
                       <span className="task-points">
                         <Target size={14} />
@@ -187,7 +182,7 @@ const TodoPage = () => {
                       </span>
                       {task.completedDate && (
                         <span className="completed-date">
-                          ✅ {task.completedDate}
+                          <Check size={14} /> {task.completedDate}
                         </span>
                       )}
                     </div>
@@ -201,32 +196,32 @@ const TodoPage = () => {
                       className={`status-btn complete ${task.status === 'COMPLETED' ? 'active' : ''}`}
                       title="Mark as completed"
                     >
-                      <Check size={16} />
+                      <Check size={18} />
                     </button>
-                    
+
                     <button
                       onClick={() => updateTaskStatus(task.id, 'PENDING')}
                       className={`status-btn pending ${task.status === 'PENDING' ? 'active' : ''}`}
                       title="Mark as pending"
                     >
-                      <Clock size={16} />
+                      <Clock size={18} />
                     </button>
-                    
+
                     <button
                       onClick={() => updateTaskStatus(task.id, 'SKIPPED')}
                       className={`status-btn skip ${task.status === 'SKIPPED' ? 'active' : ''}`}
                       title="Mark as skipped"
                     >
-                      <X size={16} />
+                      <X size={18} />
                     </button>
                   </div>
-                  
+
                   <button
                     onClick={() => deleteTask(task.id)}
                     className="delete-btn"
                     title="Delete task"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={18} />
                   </button>
                 </div>
               </div>

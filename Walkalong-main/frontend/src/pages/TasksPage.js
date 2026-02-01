@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Check, X, Clock, Play, Pause, Square, Filter, ChevronDown, ListCheck, CalendarDays, BarChart2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, X, Clock, Play, Pause, Square, Filter, ChevronDown, ListTodo, CalendarDays, BarChart2 } from 'lucide-react';
 import { todoAPI, streamsAPI } from '../services/api';
 import './TasksPage.css';
 
@@ -197,8 +197,8 @@ const TasksPage = () => {
     switch (type) {
       case 'DAILY': return <CalendarDays size={18} />;
       case 'WEEKLY': return <BarChart2 size={18} />;
-      case 'MONTHLY': return <ListCheck size={18} />;
-      default: return <ListCheck size={18} />;
+      case 'MONTHLY': return <ListTodo size={18} />;
+      default: return <ListTodo size={18} />;
     }
   };
 

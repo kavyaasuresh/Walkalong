@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Heart, Smile, TrendingUp, Save } from 'lucide-react';
+import { Calendar, Heart, Smile, TrendingUp, Save, Zap, Activity } from 'lucide-react';
 import { moodAPI } from '../services/api';
 import './MoodPage.css';
 
@@ -32,6 +32,7 @@ const MoodPage = () => {
       }
     } catch (err) {
       console.error('Failed to fetch mood:', err);
+      // Default state on failure or 404
       setCurrentMood({ mood: 3, energy: 3, motivation: 3, notes: '' });
     } finally {
       setLoading(false);
@@ -41,7 +42,7 @@ const MoodPage = () => {
   const fetchMoodHistory = async () => {
     try {
       const response = await moodAPI.getMoodHistory();
-      setMoodHistory(response.data.slice(0, 7));
+      setMoodHistory(response.data.slice(0, 6)); // First 6 items
     } catch (err) {
       console.error('Failed to fetch mood history:', err);
     }
@@ -51,7 +52,7 @@ const MoodPage = () => {
     try {
       setSaving(true);
       setError(null);
-      
+
       const moodData = {
         ...currentMood,
         date: selectedDate
@@ -63,7 +64,7 @@ const MoodPage = () => {
         const response = await moodAPI.createMood(moodData);
         setCurrentMood(response.data);
       }
-      
+
       fetchMoodHistory();
     } catch (err) {
       console.error('Failed to save mood:', err);
@@ -74,25 +75,30 @@ const MoodPage = () => {
   };
 
   const getMoodEmoji = (level) => {
-    const emojis = { 1: '😢', 2: '😕', 3: '😐', 4: '😊', 5: '😄' };
+    const emojis = { 1: '😢', 2: '😕', 3: '😐', 4: '🙂', 5: '😄' };
     return emojis[level] || '😐';
   };
 
   const getEnergyEmoji = (level) => {
-    const emojis = { 1: '🔋', 2: '🔋', 3: '🔋', 4: '⚡', 5: '⚡' };
-    return emojis[level] || '🔋';
+    const emojis = { 1: '🪫', 2: '🔋', 3: '⚡', 4: '🔥', 5: '🚀' };
+    return emojis[level] || '⚡';
   };
 
   const getMotivationEmoji = (level) => {
-    const emojis = { 1: '😴', 2: '😑', 3: '🙂', 4: '💪', 5: '🚀' };
-    return emojis[level] || '🙂';
+    const emojis = { 1: '🛌', 2: '🚶', 3: '🏃', 4: '🧗', 5: '🏆' };
+    return emojis[level] || '🏃';
   };
 
   const getMoodColor = (level) => {
+    // Return colors matching the theme accents
     const colors = {
-      1: '#ef4444', 2: '#f97316', 3: '#eab308', 4: '#22c55e', 5: '#10b981'
+      1: '#ef4444', // Red
+      2: '#f97316', // Orange
+      3: '#eab308', // Yellow
+      4: '#22c55e', // Green
+      5: '#10b981'  // Emerald
     };
-    return colors[level] || '#6b7280';
+    return colors[level] || '#64748b';
   };
 
   if (loading) return <div className="loading">Loading mood data...</div>;
@@ -102,7 +108,7 @@ const MoodPage = () => {
       <div className="mood-container">
         <div className="mood-header">
           <h1>Mood Tracker</h1>
-          <p>Track your daily mood, energy, and motivation levels</p>
+          <p>Monitor your wellbeing and mental state</p>
         </div>
 
         {error && <div className="error-message">{error}</div>}
@@ -117,18 +123,18 @@ const MoodPage = () => {
               className="date-input"
             />
             <span className="day-display">
-              {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' })}
+              {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </span>
           </div>
         </div>
 
         <div className="mood-entry-section">
           <div className="mood-grid">
-            
+
             <div className="mood-card">
               <div className="mood-card-header">
                 <Heart className="mood-icon" />
-                <h3>Overall Mood</h3>
+                <h3>Mood</h3>
                 <span className="mood-emoji">{getMoodEmoji(currentMood.mood)}</span>
               </div>
               <div className="rating-section">
@@ -138,23 +144,26 @@ const MoodPage = () => {
                       key={level}
                       onClick={() => setCurrentMood({ ...currentMood, mood: level })}
                       className={`rating-btn ${currentMood.mood >= level ? 'active' : ''}`}
-                      style={{ backgroundColor: currentMood.mood >= level ? getMoodColor(level) : '#e5e7eb' }}
+                      style={{
+                        backgroundColor: currentMood.mood >= level ? getMoodColor(level) : 'transparent',
+                        borderColor: currentMood.mood >= level ? 'transparent' : 'var(--glass-border)'
+                      }}
                     >
                       {level}
                     </button>
                   ))}
                 </div>
                 <div className="rating-labels">
-                  <span>Very Sad</span>
-                  <span>Very Happy</span>
+                  <span>Low</span>
+                  <span>High</span>
                 </div>
               </div>
             </div>
 
             <div className="mood-card">
               <div className="mood-card-header">
-                <TrendingUp className="mood-icon" />
-                <h3>Energy Level</h3>
+                <Zap className="mood-icon" />
+                <h3>Energy</h3>
                 <span className="mood-emoji">{getEnergyEmoji(currentMood.energy)}</span>
               </div>
               <div className="rating-section">
@@ -164,22 +173,25 @@ const MoodPage = () => {
                       key={level}
                       onClick={() => setCurrentMood({ ...currentMood, energy: level })}
                       className={`rating-btn ${currentMood.energy >= level ? 'active' : ''}`}
-                      style={{ backgroundColor: currentMood.energy >= level ? '#3b82f6' : '#e5e7eb' }}
+                      style={{
+                        backgroundColor: currentMood.energy >= level ? '#6366f1' : 'transparent',
+                        borderColor: currentMood.energy >= level ? 'transparent' : 'var(--glass-border)'
+                      }}
                     >
                       {level}
                     </button>
                   ))}
                 </div>
                 <div className="rating-labels">
-                  <span>Exhausted</span>
-                  <span>Energized</span>
+                  <span>Drained</span>
+                  <span>Charged</span>
                 </div>
               </div>
             </div>
 
             <div className="mood-card">
               <div className="mood-card-header">
-                <Smile className="mood-icon" />
+                <Activity className="mood-icon" />
                 <h3>Motivation</h3>
                 <span className="mood-emoji">{getMotivationEmoji(currentMood.motivation)}</span>
               </div>
@@ -190,28 +202,30 @@ const MoodPage = () => {
                       key={level}
                       onClick={() => setCurrentMood({ ...currentMood, motivation: level })}
                       className={`rating-btn ${currentMood.motivation >= level ? 'active' : ''}`}
-                      style={{ backgroundColor: currentMood.motivation >= level ? '#8b5cf6' : '#e5e7eb' }}
+                      style={{
+                        backgroundColor: currentMood.motivation >= level ? '#8b5cf6' : 'transparent',
+                        borderColor: currentMood.motivation >= level ? 'transparent' : 'var(--glass-border)'
+                      }}
                     >
                       {level}
                     </button>
                   ))}
                 </div>
                 <div className="rating-labels">
-                  <span>No Drive</span>
-                  <span>Highly Motivated</span>
+                  <span>Stuck</span>
+                  <span>Driven</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="notes-section">
-            <h3>Daily Notes</h3>
+            <h3>Daily Reflections</h3>
             <textarea
-              placeholder="How are you feeling today? What's on your mind?"
+              placeholder="What factors influenced your mood today?"
               value={currentMood.notes || ''}
               onChange={(e) => setCurrentMood({ ...currentMood, notes: e.target.value })}
               className="notes-textarea"
-              rows="4"
             />
           </div>
 
@@ -221,45 +235,42 @@ const MoodPage = () => {
               disabled={saving}
               className="save-btn"
             >
-              <Save size={16} />
-              {saving ? 'Saving...' : 'Save Mood Entry'}
+              <Save size={18} />
+              {saving ? 'Saving...' : 'Save Entry'}
             </button>
           </div>
         </div>
 
         <div className="mood-history-section">
-          <h3>Recent Mood History</h3>
+          <h3>Recent History</h3>
           <div className="history-grid">
             {moodHistory.length === 0 ? (
               <div className="empty-history">
-                <p>No mood history yet. Start tracking your mood!</p>
+                <p>No mood logs found.</p>
               </div>
             ) : (
               moodHistory.map((entry, index) => (
                 <div key={index} className="history-item">
                   <div className="history-date">
-                    {new Date(entry.date).toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric' 
+                    {new Date(entry.date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric'
                     })}
                   </div>
                   <div className="history-moods">
-                    <div className="history-mood-item">
+                    <div className="history-mood-item" title="Mood">
                       <span className="history-emoji">{getMoodEmoji(entry.mood)}</span>
-                      <span className="history-label">Mood</span>
                     </div>
-                    <div className="history-mood-item">
+                    <div className="history-mood-item" title="Energy">
                       <span className="history-emoji">{getEnergyEmoji(entry.energy)}</span>
-                      <span className="history-label">Energy</span>
                     </div>
-                    <div className="history-mood-item">
+                    <div className="history-mood-item" title="Motivation">
                       <span className="history-emoji">{getMotivationEmoji(entry.motivation)}</span>
-                      <span className="history-label">Motivation</span>
                     </div>
                   </div>
                   {entry.notes && (
                     <div className="history-notes">
-                      "{entry.notes.substring(0, 50)}{entry.notes.length > 50 ? '...' : ''}"
+                      {entry.notes.length > 40 ? entry.notes.substring(0, 40) + '...' : entry.notes}
                     </div>
                   )}
                 </div>
