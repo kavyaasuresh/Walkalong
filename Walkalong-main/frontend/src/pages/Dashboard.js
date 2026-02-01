@@ -36,7 +36,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [selectedDate, currentWeekStart]);
+  }, [selectedDate, currentWeekStart, selectedStreamId]); // Added selectedStreamId to dependencies
 
   // Function to navigate weeks
   const changeWeek = (direction) => {

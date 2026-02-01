@@ -1,4 +1,3 @@
-```javascript
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, User, Lock, ArrowRight } from 'lucide-react';
@@ -27,7 +26,7 @@ const LoginPage = ({ onLogin }) => {
                     <p>Enter your credentials to access your workspace</p>
                 </div>
 
-                <form className="auth-form" onSubmit={handleSubmit}>
+                <form className="auth-form" onSubmit={handleLogin}>
                     <div className="auth-input-group">
                         <label>Email Address</label>
                         <div className="input-wrapper">
@@ -36,8 +35,8 @@ const LoginPage = ({ onLogin }) => {
                                 type="email"
                                 placeholder="name@example.com"
                                 required
-                                value={credentials.email}
-                                onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
                     </div>
@@ -50,8 +49,8 @@ const LoginPage = ({ onLogin }) => {
                                 type="password"
                                 placeholder="••••••••"
                                 required
-                                value={credentials.password}
-                                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
                     </div>
