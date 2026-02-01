@@ -9,7 +9,32 @@
     display: flex;
     flex-direction: column;
     z-index: 1000;
+    transition: transform 0.3s ease;
     box-shadow: 4px 0 10px rgba(0, 0, 0, 0.02);
+}
+
+.sidebar.collapsed {
+    transform: translateX(-260px);
+}
+
+.sidebar-toggle {
+    position: fixed;
+    top: 1.5rem;
+    left: 1.5rem;
+    z-index: 1100;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #1e293b;
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+}
+
+.sidebar-toggle:hover {
+    background: #f1f5f9;
+    transform: scale(1.05);
 }
 
 .sidebar-header {

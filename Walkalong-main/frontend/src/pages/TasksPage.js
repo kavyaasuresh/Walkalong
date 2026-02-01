@@ -6,7 +6,14 @@ import './TasksPage.css';
 const TasksPage = () => {
   const [tasks, setTasks] = useState([]);
   const [streams, setStreams] = useState([]);
-  const [newTask, setNewTask] = useState({ title: '', streamId: '', type: 'DAILY', deadline: '', revisionDate: '', revisionCount: 0 });
+  const [newTask, setNewTask] = useState({
+    title: '',
+    streamId: '',
+    type: 'DAILY',
+    deadline: '',
+    revisionDate: '',
+    revisionCount: 0
+  });
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [streamFilter, setStreamFilter] = useState('ALL');
   const [activeTimer, setActiveTimer] = useState(null); // { id: taskId, startTime: Date.now(), elapsed: task.durationSeconds }
@@ -144,25 +151,49 @@ const TasksPage = () => {
         <div className="tasks-filter-bar">
           <div className="filter-group">
             <Filter size={18} />
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="qa-select">
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="qa-select filter-status">
               <option value="ALL">All Status</option>
               {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
             </select>
-            <select value={streamFilter} onChange={e => setStreamFilter(e.target.value)} className="qa-select">
+            <select value={streamFilter} onChange={e => setStreamFilter(e.target.value)} className="qa-select filter-stream">
               <option value="ALL">All Streams</option>
               {streams.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
 
-          <form className="quick-add-bar" onSubmit={createTask}>
+          <form className="quick-add-bar expanded-form" onSubmit={createTask}>
             <input
               type="text"
-              placeholder="Quick add task..."
+              placeholder="Task Title..."
               value={newTask.title}
               onChange={e => setNewTask({ ...newTask, title: e.target.value })}
-              className="qa-input"
+              className="qa-input-main"
+              required
             />
-            <button type="submit" className="qa-btn"><Plus size={18} /> Add</button>
+            <select
+              value={newTask.streamId}
+              onChange={e => setNewTask({ ...newTask, streamId: e.target.value })}
+              className="qa-select-sub"
+            >
+              <option value="">Stream...</option>
+              {streams.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            <select
+              value={newTask.type}
+              onChange={e => setNewTask({ ...newTask, type: e.target.value })}
+              className="qa-select-sub"
+            >
+              <option value="DAILY">Daily</option>
+              <option value="WEEKLY">Weekly</option>
+              <option value="MONTHLY">Monthly</option>
+            </select>
+            <input
+              type="date"
+              value={newTask.deadline}
+              onChange={e => setNewTask({ ...newTask, deadline: e.target.value })}
+              className="qa-input-date"
+            />
+            <button type="submit" className="qa-btn"><Plus size={18} /> Add Task</button>
           </form>
         </div>
       </div>

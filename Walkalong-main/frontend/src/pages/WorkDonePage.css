@@ -167,10 +167,10 @@
   /* Handwritten feel */
   font-size: 1.25rem;
   /* Slightly larger */
-  color: #0f172a;
-  /* Deep charcoal/Ink black */
-  font-weight: 600;
-  /* Bold the ink */
+  color: #000000;
+  /* Pure Ink Black */
+  font-weight: 700;
+  /* Thick ink */
   outline: none;
   width: 100%;
 }

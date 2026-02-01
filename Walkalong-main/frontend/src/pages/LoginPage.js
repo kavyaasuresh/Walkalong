@@ -1,16 +1,18 @@
+```javascript
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn, User, Lock, ArrowRight } from 'lucide-react';
 import './AuthPages.css';
 
-const LoginPage = () => {
-    const [credentials, setCredentials] = useState({ email: '', password: '' });
+const LoginPage = ({ onLogin }) => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleLogin = (e) => {
         e.preventDefault();
-        // Mock login
-        console.log("Logging in...", credentials);
+        // In a real app, you'd validate credentials here
+        onLogin();
         navigate('/dashboard');
     };
 

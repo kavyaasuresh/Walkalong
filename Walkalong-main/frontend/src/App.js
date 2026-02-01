@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import WorkDonePage from './pages/WorkDonePage';
@@ -14,25 +14,37 @@ import RegisterPage from './pages/RegisterPage';
 import MotivationPage from './pages/MotivationPage';
 import './App.css';
 
+const ProtectedRoute = ({ children, isAuthenticated }) => {
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return children;
+};
+
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const login = () => setIsAuthenticated(true);
+  const logout = () => setIsAuthenticated(false);
+
   return (
     <Router>
       <div className="App">
-        <Navbar />
-        <main className="main-content">
+        {isAuthenticated && <Navbar logout={logout} />}
+        <main className={isAuthenticated ? "main-content" : "auth-content"}>
           <Routes>
-            <Route path="/" element={<LoginPage />} />
-            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage onLogin={login} />} />
+            <Route path="/login" element={<LoginPage onLogin={login} />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/motivation" element={<MotivationPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/workdone" element={<WorkDonePage />} />
-            <Route path="/todo" element={<TodoPage />} />
-            <Route path="/streams" element={<StreamsPage />} />
-            <Route path="/tasks" element={<TasksPage />} />
-            <Route path="/viewplan" element={<ViewPlanPage />} />
-            <Route path="/mood" element={<MoodPage />} />
-            <Route path="/streams/:id" element={<StreamDetail />} />
+
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Dashboard /></ProtectedRoute>} />
+            <Route path="/workdone" element={<ProtectedRoute isAuthenticated={isAuthenticated}><WorkDonePage /></ProtectedRoute>} />
+            <Route path="/tasks" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TasksPage /></ProtectedRoute>} />
+            <Route path="/viewplan" element={<ProtectedRoute isAuthenticated={isAuthenticated}><ViewPlanPage /></ProtectedRoute>} />
+            <Route path="/streams" element={<ProtectedRoute isAuthenticated={isAuthenticated}><StreamsPage /></ProtectedRoute>} />
+            <Route path="/streams/:id" element={<ProtectedRoute isAuthenticated={isAuthenticated}><StreamDetail /></ProtectedRoute>} />
+            <Route path="/motivation" element={<ProtectedRoute isAuthenticated={isAuthenticated}><MotivationPage /></ProtectedRoute>} />
+            <Route path="/mood" element={<ProtectedRoute isAuthenticated={isAuthenticated}><MoodPage /></ProtectedRoute>} />
+            <Route path="/todo" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TodoPage /></ProtectedRoute>} />
           </Routes>
         </main>
       </div>
