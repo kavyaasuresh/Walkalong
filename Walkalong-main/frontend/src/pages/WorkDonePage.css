@@ -165,9 +165,12 @@
   border: none;
   font-family: 'Caveat', 'Indie Flower', 'Comic Sans MS', cursive;
   /* Handwritten feel */
-  font-size: 1.2rem;
-  color: #1a202c;
-  /* Ink blue/black */
+  font-size: 1.25rem;
+  /* Slightly larger */
+  color: #0f172a;
+  /* Deep charcoal/Ink black */
+  font-weight: 600;
+  /* Bold the ink */
   outline: none;
   width: 100%;
 }

@@ -7,9 +7,10 @@ const TasksPage = () => {
   const [tasks, setTasks] = useState([]);
   const [streams, setStreams] = useState([]);
   const [newTask, setNewTask] = useState({ title: '', streamId: '', type: 'DAILY', deadline: '', revisionDate: '', revisionCount: 0 });
-  const [filter, setFilter] = useState('ALL');
-  const [activeTimer, setActiveTimer] = useState(null); // taskId
-  const [elapsedTime, setElapsedTime] = useState(0); // seconds
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [streamFilter, setStreamFilter] = useState('ALL');
+  const [activeTimer, setActiveTimer] = useState(null); // { id: taskId, startTime: Date.now(), elapsed: task.durationSeconds }
+  const [sessionTime, setSessionTime] = useState(0);
   const timerRef = useRef(null);
   const [loading, setLoading] = useState(true);
 
@@ -82,49 +83,56 @@ const TasksPage = () => {
     }
   };
 
-  // Timer Logic
+  // Stopwatch Logic
   const toggleTimer = (taskId) => {
     if (activeTimer === taskId) {
-      // Pause
+      // Pause: Save currently accumulated time
+      saveTime(taskId);
       clearInterval(timerRef.current);
       setActiveTimer(null);
+      setSessionTime(0);
     } else {
       // Start
-      if (activeTimer) clearInterval(timerRef.current); // Stop others
+      if (activeTimer) saveTime(activeTimer); // Save previous before switching
+      clearInterval(timerRef.current);
+
       setActiveTimer(taskId);
-      const task = tasks.find(t => t.id === taskId);
-      setElapsedTime(0); // In real app, load prev session time if needed
+      setSessionTime(0);
       timerRef.current = setInterval(() => {
-        setElapsedTime(prev => prev + 1);
+        setSessionTime(prev => prev + 1);
       }, 1000);
     }
   };
 
   const saveTime = async (taskId) => {
-    if (!activeTimer) return;
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
 
-    const minutes = Math.floor(elapsedTime / 60);
-    if (minutes > 0) {
-      const task = tasks.find(t => t.id === taskId);
-      const newDuration = (task.duration || 0) + minutes;
+    const newDurationSeconds = (task.durationSeconds || 0) + sessionTime;
 
-      try {
-        await todoAPI.updateTask(taskId, { duration: newDuration });
-        setTasks(tasks.map(t => t.id === taskId ? { ...t, duration: newDuration } : t));
-        setElapsedTime(0); // Reset local counter after save
-      } catch (e) {
-        console.error("Failed to save time", e);
-      }
+    try {
+      // Optimistic update
+      setTasks(tasks.map(t => t.id === taskId ? { ...t, durationSeconds: newDurationSeconds } : t));
+      await todoAPI.updateTask(taskId, { durationSeconds: newDurationSeconds });
+      // Reset session time if we paused, else it keeps growing in interval
+      if (activeTimer !== taskId) setSessionTime(0);
+    } catch (e) {
+      console.error("Failed to save time", e);
     }
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  const formatStopwatch = (totalSeconds) => {
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return `${hrs > 0 ? hrs + ':' : ''}${mins < 10 && hrs > 0 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  const filteredTasks = tasks.filter(t => filter === 'ALL' || t.status === filter);
+  const filteredTasks = tasks.filter(t => {
+    const statusMatch = statusFilter === 'ALL' || t.status === statusFilter;
+    const streamMatch = streamFilter === 'ALL' || (t.stream && t.stream.id.toString() === streamFilter);
+    return statusMatch && streamMatch;
+  });
 
   if (loading) return <div className="loading">Loading tasks...</div>;
 
@@ -133,34 +141,30 @@ const TasksPage = () => {
       <div className="tasks-header">
         <h1>Task Master</h1>
 
-        {/* Quick Add Bar */}
-        <form className="quick-add-bar" onSubmit={createTask}>
-          <input
-            type="text"
-            placeholder="What needs to be done?"
-            value={newTask.title}
-            onChange={e => setNewTask({ ...newTask, title: e.target.value })}
-            className="qa-input"
-          />
-          <select
-            value={newTask.streamId}
-            onChange={e => setNewTask({ ...newTask, streamId: e.target.value })}
-            className="qa-select"
-          >
-            <option value="">No Stream</option>
-            {streams.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-          <select
-            value={newTask.type}
-            onChange={e => setNewTask({ ...newTask, type: e.target.value })}
-            className="qa-select"
-          >
-            <option value="DAILY">Daily</option>
-            <option value="WEEKLY">Weekly</option>
-            <option value="MONTHLY">Monthly</option>
-          </select>
-          <button type="submit" className="qa-btn"><Plus size={18} /> Add</button>
-        </form>
+        <div className="tasks-filter-bar">
+          <div className="filter-group">
+            <Filter size={18} />
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="qa-select">
+              <option value="ALL">All Status</option>
+              {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
+            <select value={streamFilter} onChange={e => setStreamFilter(e.target.value)} className="qa-select">
+              <option value="ALL">All Streams</option>
+              {streams.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+
+          <form className="quick-add-bar" onSubmit={createTask}>
+            <input
+              type="text"
+              placeholder="Quick add task..."
+              value={newTask.title}
+              onChange={e => setNewTask({ ...newTask, title: e.target.value })}
+              className="qa-input"
+            />
+            <button type="submit" className="qa-btn"><Plus size={18} /> Add</button>
+          </form>
+        </div>
       </div>
 
       <div className="tasks-table-wrapper">
@@ -171,18 +175,19 @@ const TasksPage = () => {
               <th>Stream</th>
               <th>Deadline</th>
               <th>Status</th>
-              <th>Timer</th>
+              <th>Stopwatch</th>
               <th>Revision</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredTasks.length === 0 ? (
-              <tr><td colSpan="7" className="empty-row">No tasks found</td></tr>
+              <tr><td colSpan="7" className="empty-row">No tasks found matching filters</td></tr>
             ) : (
               filteredTasks.map(task => {
                 const isCompleted = task.status === 'COMPLETED';
                 const isTimerActive = activeTimer === task.id;
+                const totalDisplayTime = (task.durationSeconds || 0) + (isTimerActive ? sessionTime : 0);
 
                 return (
                   <tr key={task.id} className={`task-row ${isCompleted ? 'completed-row' : ''}`}>
@@ -223,10 +228,10 @@ const TasksPage = () => {
                           {isTimerActive ? <Pause size={14} /> : <Play size={14} />}
                         </button>
                         <span className="time-display">
-                          {isTimerActive ? formatTime(elapsedTime) : `${task.duration || 0}m`}
+                          {formatStopwatch(totalDisplayTime)}
                         </span>
-                        {isTimerActive && (
-                          <button className="save-time-btn" onClick={() => saveTime(task.id)} title="Save Time">
+                        {!isCompleted && !isTimerActive && sessionTime === 0 && (
+                          <button className="save-time-btn" onClick={() => saveTime(task.id)} title="Save Progress">
                             <Save size={14} />
                           </button>
                         )}

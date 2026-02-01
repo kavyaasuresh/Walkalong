@@ -30,9 +30,9 @@ const Dashboard = () => {
   const [showPointsModal, setShowPointsModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Palettes
-  const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444'];
-  const CHART_TEXT_COLOR = '#94a3b8';
+  // Palettes - Mild "Sparkling" colors
+  const COLORS = ['#34d399', '#fbbf24', '#f472b6', '#3b82f6', '#8b5cf6', '#0ea5e9'];
+  const CHART_TEXT_COLOR = '#475569';
 
   useEffect(() => {
     fetchDashboardData();
@@ -253,22 +253,22 @@ const Dashboard = () => {
               <AreaChart data={moodData}>
                 <defs>
                   <linearGradient id="colorMood" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ec4899" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#34d399" stopOpacity={0.6} />
+                    <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorEnergy" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.6} />
+                    <stop offset="95%" stopColor="#fbbf24" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <XAxis
                   dataKey="date"
-                  stroke="#94a3b8"
+                  stroke={CHART_TEXT_COLOR}
                   tickFormatter={(val) => val}
                 />
-                <Tooltip contentStyle={{ background: '#1e1e2e', border: 'none', borderRadius: '8px' }} />
-                <Area type="monotone" dataKey="mood" stroke="#ec4899" fillOpacity={1} fill="url(#colorMood)" />
-                <Area type="monotone" dataKey="energy" stroke="#6366f1" fillOpacity={1} fill="url(#colorEnergy)" />
+                <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '8px', color: '#1e293b' }} />
+                <Area type="monotone" dataKey="mood" stroke="#34d399" fillOpacity={1} fill="url(#colorMood)" strokeWidth={3} dot={{ r: 4, fill: '#34d399', strokeWidth: 2, stroke: '#fff' }} />
+                <Area type="monotone" dataKey="energy" stroke="#fbbf24" fillOpacity={1} fill="url(#colorEnergy)" strokeWidth={3} dot={{ r: 4, fill: '#fbbf24', strokeWidth: 2, stroke: '#fff' }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -295,13 +295,13 @@ const Dashboard = () => {
               <AreaChart data={satisfactionData}>
                 <defs>
                   <linearGradient id="colorSat" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.5} />
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#f472b6" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#f472b6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="date" stroke="#94a3b8" hide />
-                <Tooltip contentStyle={{ background: '#1e1e2e', border: 'none' }} />
-                <Area type="monotone" dataKey="satisfaction" stroke="#f59e0b" fill="url(#colorSat)" strokeWidth={2} />
+                <XAxis dataKey="date" stroke={CHART_TEXT_COLOR} hide />
+                <Tooltip contentStyle={{ background: 'rgba(255,255,255,0.9)', border: 'none', color: '#1e293b' }} />
+                <Area type="monotone" dataKey="satisfaction" stroke="#f472b6" fill="url(#colorSat)" strokeWidth={3} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
