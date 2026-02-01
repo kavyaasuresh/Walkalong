@@ -1,0 +1,122 @@
+.motivation-container {
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.motivation-header {
+    margin-bottom: 2rem;
+}
+
+.motivation-header h1 {
+    font-size: 2.25rem;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+}
+
+.motivation-header p {
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+.motivation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.motivation-section {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.motivation-section h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.video-player-container {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #0f172a;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.motivation-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.video-placeholder {
+    color: #64748b;
+    font-style: italic;
+}
+
+.quote-display-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.quote-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+}
+
+.quote-author {
+    color: #6366f1;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.shuffle-btn {
+    align-self: center;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: #eff6ff;
+    color: #2563eb;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.shuffle-btn:hover {
+    background: #dbeafe;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
+    .motivation-grid {
+        grid-template-columns: 1fr;
+    }
+}

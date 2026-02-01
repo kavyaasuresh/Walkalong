@@ -11,6 +11,7 @@ import MoodPage from './pages/MoodPage';
 import StreamDetail from './pages/StreamDetail';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import MotivationPage from './pages/MotivationPage';
 import './App.css';
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
             <Route path="/" element={<LoginPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/motivation" element={<MotivationPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/workdone" element={<WorkDonePage />} />
             <Route path="/todo" element={<TodoPage />} />

@@ -4,14 +4,30 @@
   flex-direction: column;
 }
 
+.main-content.App {
+  display: flex;
+  /* Sidebar and main-content side by side */
+  min-height: 100vh;
+  background: #f8fafc;
+  /* Professional light background */
+}
+
 .main-content {
   flex: 1;
-  padding: var(--spacing-lg);
-  width: 100%;
-  margin: 0;
-  max-width: none;
+  margin-left: 260px;
+  /* Width of sidebar */
+  padding: 0 2rem 2rem 2rem;
+  transition: margin-left 0.3s ease;
+  width: calc(100% - 260px);
   /* logic for flex child */
   overflow-x: hidden;
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 80px;
+    width: calc(100% - 80px);
+  }
 }
 
 /* Glassmorphism Card Utilities */
