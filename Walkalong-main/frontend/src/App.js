@@ -12,6 +12,9 @@ import StreamDetail from './pages/StreamDetail';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import MotivationPage from './pages/MotivationPage';
+import AnswerWritingPage from './pages/AnswerWritingPage';
+import SubmissionsListPage from './pages/SubmissionsListPage';
+import AnswerReviewPage from './pages/AnswerReviewPage';
 import './App.css';
 
 const ProtectedRoute = ({ children, isAuthenticated }) => {
@@ -45,6 +48,9 @@ function App() {
             <Route path="/motivation" element={<ProtectedRoute isAuthenticated={isAuthenticated}><MotivationPage /></ProtectedRoute>} />
             <Route path="/mood" element={<ProtectedRoute isAuthenticated={isAuthenticated}><MoodPage /></ProtectedRoute>} />
             <Route path="/todo" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TodoPage /></ProtectedRoute>} />
+            <Route path="/answer-writing" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AnswerWritingPage /></ProtectedRoute>} />
+            <Route path="/my-submissions" element={<ProtectedRoute isAuthenticated={isAuthenticated}><SubmissionsListPage /></ProtectedRoute>} />
+            <Route path="/submission/:id" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AnswerReviewPage /></ProtectedRoute>} />
           </Routes>
         </main>
       </div>

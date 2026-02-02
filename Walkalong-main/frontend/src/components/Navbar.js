@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, BookOpen, CheckSquare, Layers, ListTodo, Calendar, Heart, Compass, Zap, LogOut, Menu, X } from 'lucide-react';
+import { Home, BookOpen, CheckSquare, Layers, ListTodo, Calendar, Heart, Compass, Zap, LogOut, Menu, X, Edit3, ClipboardList } from 'lucide-react';
 import './Navbar.css';
 
 const Navbar = ({ logout }) => {
@@ -63,6 +63,16 @@ const Navbar = ({ logout }) => {
           <Link to="/workdone" className={`sidebar-item ${location.pathname === '/workdone' ? 'active' : ''}`}>
             <BookOpen size={20} />
             <span>WorkDone</span>
+          </Link>
+
+          <Link to="/answer-writing" className={`sidebar-item ${location.pathname === '/answer-writing' ? 'active' : ''}`}>
+            <Edit3 size={20} />
+            <span>Answer Writing</span>
+          </Link>
+
+          <Link to="/my-submissions" className={`sidebar-item ${location.pathname === '/my-submissions' ? 'active' : ''}`}>
+            <ClipboardList size={20} />
+            <span>My Submissions</span>
           </Link>
 
           <Link to="/todo" className={`sidebar-item ${location.pathname === '/todo' ? 'active' : ''}`}>

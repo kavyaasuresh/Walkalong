@@ -21,7 +21,7 @@ const realWorkDoneAPI = {
   updateEntry: (id, entry) => api.put(`/workdone/${id}`, entry),
   deleteEntry: (id) => api.delete(`/workdone/${id}`),
   getPointsSummary: () => api.get('/workdone/points/summary'),
-  getWeeklySatisfaction: (startDate) => 
+  getWeeklySatisfaction: (startDate) =>
     api.get(`/workdone/satisfaction/weekly${startDate ? `?startDate=${startDate}` : ''}`),
 };
 
@@ -58,5 +58,31 @@ export const todoAPI = USE_MOCK_API ? mockTodoAPI : realTodoAPI;
 export const streamsAPI = USE_MOCK_API ? mockStreamsAPI : realStreamsAPI;
 export const viewPlanAPI = USE_MOCK_API ? mockViewPlanAPI : realViewPlanAPI;
 export const moodAPI = USE_MOCK_API ? mockMoodAPI : realMoodAPI;
+
+const realAnswerAPI = {
+  getQuestions: () => api.get('/answers/questions'),
+  createQuestion: (question) => api.post('/answers/questions', question),
+  submitAnswer: (formData) => api.post('/answers/submit', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  getMySubmissions: () => api.get('/answers/my-submissions'),
+  getSubmission: (id) => api.get(`/answers/submission/${id}`),
+  submitReview: (submissionId, review) => api.post(`/answers/review?submissionId=${submissionId}`, review),
+  getReview: (submissionId) => api.get(`/answers/submission/${submissionId}/review`),
+  getDownloadUrl: (fileName) => `${API_BASE_URL}/answers/download/${fileName}`,
+};
+
+const mockAnswerAPI = {
+  getQuestions: () => Promise.resolve({ data: [] }),
+  createQuestion: (question) => Promise.resolve({ data: { ...question, id: Date.now() } }),
+  submitAnswer: (formData) => Promise.resolve({ data: { id: Date.now(), status: 'SUBMITTED' } }),
+  getMySubmissions: () => Promise.resolve({ data: [] }),
+  getSubmission: (id) => Promise.resolve({ data: {} }),
+  submitReview: (id, review) => Promise.resolve({ data: review }),
+  getReview: (id) => Promise.resolve({ data: null }),
+  getDownloadUrl: (fileName) => '#',
+};
+
+export const answersAPI = USE_MOCK_API ? mockAnswerAPI : realAnswerAPI;
 
 export default api;
