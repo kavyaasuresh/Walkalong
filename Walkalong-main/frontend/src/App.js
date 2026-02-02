@@ -15,6 +15,8 @@ import MotivationPage from './pages/MotivationPage';
 import AnswerWritingPage from './pages/AnswerWritingPage';
 import SubmissionsListPage from './pages/SubmissionsListPage';
 import AnswerReviewPage from './pages/AnswerReviewPage';
+import QuestionBarPage from './pages/QuestionBarPage';
+import ReviewQueuePage from './pages/ReviewQueuePage';
 import './App.css';
 
 const ProtectedRoute = ({ children, isAuthenticated }) => {
@@ -23,10 +25,18 @@ const ProtectedRoute = ({ children, isAuthenticated }) => {
 };
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('isAuthenticated') === 'true';
+  });
 
-  const login = () => setIsAuthenticated(true);
-  const logout = () => setIsAuthenticated(false);
+  const login = () => {
+    localStorage.setItem('isAuthenticated', 'true');
+    setIsAuthenticated(true);
+  };
+  const logout = () => {
+    localStorage.removeItem('isAuthenticated');
+    setIsAuthenticated(false);
+  };
 
   return (
     <Router>
@@ -49,6 +59,8 @@ function App() {
             <Route path="/mood" element={<ProtectedRoute isAuthenticated={isAuthenticated}><MoodPage /></ProtectedRoute>} />
             <Route path="/todo" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TodoPage /></ProtectedRoute>} />
             <Route path="/answer-writing" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AnswerWritingPage /></ProtectedRoute>} />
+            <Route path="/question-bar" element={<ProtectedRoute isAuthenticated={isAuthenticated}><QuestionBarPage /></ProtectedRoute>} />
+            <Route path="/review-queue" element={<ProtectedRoute isAuthenticated={isAuthenticated}><ReviewQueuePage /></ProtectedRoute>} />
             <Route path="/my-submissions" element={<ProtectedRoute isAuthenticated={isAuthenticated}><SubmissionsListPage /></ProtectedRoute>} />
             <Route path="/submission/:id" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AnswerReviewPage /></ProtectedRoute>} />
           </Routes>

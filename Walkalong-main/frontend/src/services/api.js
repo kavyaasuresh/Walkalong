@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { mockWorkDoneAPI, mockTodoAPI, mockStreamsAPI, mockViewPlanAPI, mockMoodAPI } from './mockApi';
+import { mockWorkDoneAPI, mockTodoAPI, mockStreamsAPI, mockViewPlanAPI, mockMoodAPI, mockAnswerAPI } from './mockApi';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 const USE_MOCK_API = true; // Set to false when backend is running
@@ -70,17 +70,6 @@ const realAnswerAPI = {
   submitReview: (submissionId, review) => api.post(`/answers/review?submissionId=${submissionId}`, review),
   getReview: (submissionId) => api.get(`/answers/submission/${submissionId}/review`),
   getDownloadUrl: (fileName) => `${API_BASE_URL}/answers/download/${fileName}`,
-};
-
-const mockAnswerAPI = {
-  getQuestions: () => Promise.resolve({ data: [] }),
-  createQuestion: (question) => Promise.resolve({ data: { ...question, id: Date.now() } }),
-  submitAnswer: (formData) => Promise.resolve({ data: { id: Date.now(), status: 'SUBMITTED' } }),
-  getMySubmissions: () => Promise.resolve({ data: [] }),
-  getSubmission: (id) => Promise.resolve({ data: {} }),
-  submitReview: (id, review) => Promise.resolve({ data: review }),
-  getReview: (id) => Promise.resolve({ data: null }),
-  getDownloadUrl: (fileName) => '#',
 };
 
 export const answersAPI = USE_MOCK_API ? mockAnswerAPI : realAnswerAPI;

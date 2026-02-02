@@ -67,7 +67,17 @@ const Navbar = ({ logout }) => {
 
           <Link to="/answer-writing" className={`sidebar-item ${location.pathname === '/answer-writing' ? 'active' : ''}`}>
             <Edit3 size={20} />
-            <span>Answer Writing</span>
+            <span>Create Question</span>
+          </Link>
+
+          <Link to="/question-bar" className={`sidebar-item ${location.pathname === '/question-bar' ? 'active' : ''}`}>
+            <Layers size={20} />
+            <span>Question Bar</span>
+          </Link>
+
+          <Link to="/review-queue" className={`sidebar-item ${location.pathname === '/review-queue' ? 'active' : ''}`}>
+            <CheckSquare size={20} />
+            <span>Review Queue</span>
           </Link>
 
           <Link to="/my-submissions" className={`sidebar-item ${location.pathname === '/my-submissions' ? 'active' : ''}`}>
@@ -76,7 +86,7 @@ const Navbar = ({ logout }) => {
           </Link>
 
           <Link to="/todo" className={`sidebar-item ${location.pathname === '/todo' ? 'active' : ''}`}>
-            <CheckSquare size={20} />
+            <Compass size={20} />
             <span>Legacy Todo</span>
           </Link>
         </div>

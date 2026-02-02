@@ -58,36 +58,38 @@
 }
 
 .qa-select.filter-status {
-  background: #fff7ed;
-  border-color: #fbd38d;
-  color: #9a3412;
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: var(--accent-warning);
   font-weight: 700;
 }
 
 .qa-select.filter-stream {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-  color: #166534;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--accent-success);
   font-weight: 700;
 }
 
 .expanded-form {
   display: flex;
   gap: 0.5rem;
-  background: #ffffff;
+  background: var(--glass-bg);
   padding: 0.5rem;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
   flex: 1;
 }
 
 .qa-input-main {
   flex: 2;
   padding: 0.65rem 1rem;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
   font-size: 0.95rem;
+  color: white;
   outline: none;
 }
 
@@ -95,11 +97,11 @@
 .qa-input-date {
   flex: 1;
   padding: 0.65rem;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--glass-border);
   border-radius: 8px;
   font-size: 0.9rem;
-  color: #64748b;
-  background: #f8fafc;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.03);
   outline: none;
 }
 

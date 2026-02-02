@@ -212,7 +212,7 @@ const Dashboard = () => {
       <header className="dashboard-header-row">
         <div className="welcome-text">
           <h1>Dashboard</h1>
-          <p>Metrics for <span className="highlight-date">{selectedDate}</span></p>
+          <p>Analyzing performance for <span className="highlight-date">{selectedDate}</span></p>
         </div>
         <div className="global-controls">
           <div className="date-picker-wrapper">
@@ -226,6 +226,38 @@ const Dashboard = () => {
           </div>
         </div>
       </header>
+
+      {/* 0.2 Quick Stats Summary Row */}
+      <div className="quick-stats-row">
+        <div className="stat-card glass-panel">
+          <div className="stat-icon-bg mood"><Heart size={20} /></div>
+          <div className="stat-info">
+            <span className="stat-value">{moodData.find(d => d.date === new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short' }))?.mood || '-'}</span>
+            <span className="stat-label">Mood Score</span>
+          </div>
+        </div>
+        <div className="stat-card glass-panel">
+          <div className="stat-icon-bg energy"><Activity size={20} /></div>
+          <div className="stat-info">
+            <span className="stat-value">{moodData.find(d => d.date === new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short' }))?.energy || '-'}</span>
+            <span className="stat-label">Energy Level</span>
+          </div>
+        </div>
+        <div className="stat-card glass-panel">
+          <div className="stat-icon-bg tasks"><BookOpen size={20} /></div>
+          <div className="stat-info">
+            <span className="stat-value">{selectedStreamAnalytics.completed} / {selectedStreamAnalytics.completed + selectedStreamAnalytics.pending + selectedStreamAnalytics.skipped}</span>
+            <span className="stat-label">Tasks Done</span>
+          </div>
+        </div>
+        <div className="stat-card glass-panel">
+          <div className="stat-icon-bg points"><Star size={20} /></div>
+          <div className="stat-info">
+            <span className="stat-value">+{pointsData.weeklyPoints || 0}</span>
+            <span className="stat-label">Weekly Karma</span>
+          </div>
+        </div>
+      </div>
 
       {/* 0.5 Revision Reminders */}
       {revisionTasks.length > 0 && (

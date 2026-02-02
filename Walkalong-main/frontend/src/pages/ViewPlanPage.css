@@ -105,12 +105,27 @@
   z-index: 1;
 }
 
+.time-marker-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 80px;
+  margin-right: var(--spacing-md);
+  text-align: right;
+}
+
 .time-marker {
   font-family: 'JetBrains Mono', monospace;
   color: var(--accent-secondary);
   font-weight: bold;
-  min-width: 60px;
   font-size: 0.9rem;
+}
+
+.date-sub-marker {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 2px;
 }
 
 .timeline-card-content {

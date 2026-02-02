@@ -48,7 +48,11 @@ const TasksPage = () => {
     e.preventDefault();
     if (!newTask.title) return;
     try {
-      const res = await todoAPI.createTask(newTask);
+      const payload = { ...newTask };
+      if (newTask.streamId) {
+        payload.stream = { id: parseInt(newTask.streamId) };
+      }
+      const res = await todoAPI.createTask(payload);
       setTasks([...tasks, res.data]);
       setNewTask({ title: '', streamId: '', type: 'DAILY', deadline: '', revisionDate: '', revisionCount: 0 });
     } catch (error) {

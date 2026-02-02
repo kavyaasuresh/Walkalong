@@ -85,7 +85,10 @@ const ViewPlanPage = () => {
                       <div className="timeline-list">
                         {categoryTasks.map(task => (
                           <div key={task.id} className="timeline-item">
-                            <span className="time-marker">{task.deadline ? task.deadline.split('T')[1]?.slice(0, 5) : 'All Day'}</span>
+                            <div className="time-marker-group">
+                              <span className="time-marker">{task.deadline ? task.deadline.split('T')[1]?.slice(0, 5) : 'All Day'}</span>
+                              <span className="date-sub-marker">{task.assignedDate || 'Today'}</span>
+                            </div>
                             <div className="timeline-card-content">
                               <div className="task-info">
                                 <h4>{task.title}</h4>
