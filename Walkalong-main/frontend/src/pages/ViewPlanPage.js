@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { streamsAPI, todoAPI } from '../services/api';
-import { Calendar, Layout, List, CheckCircle, Clock } from 'lucide-react';
+import { Layout, CheckCircle, Clock } from 'lucide-react';
 import './ViewPlanPage.css';
 
 const ViewPlanPage = () => {
@@ -9,32 +9,50 @@ const ViewPlanPage = () => {
   const [streams, setStreams] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [tasksRes, streamsRes] = await Promise.all([
-          todoAPI.getAllTasks(),
-          streamsAPI.getAllStreams()
-        ]);
-        setTasks(tasksRes.data);
-        setStreams(streamsRes.data);
-      } catch (error) {
-        console.error("Error fetching plan data", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const fetchData = async () => {
+  try {
+    const [tasksRes, streamsRes] = await Promise.all([
+      todoAPI.getAllTasks(),
+      streamsAPI.getAllStreams()
+    ]);
+    setTasks(tasksRes.data);
+    setStreams(streamsRes.data);
+  } catch (error) {
+    console.error("Error fetching plan data", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  // Group by Time (Original Logic)
-  const getTasksByTime = () => {
-    const sorted = [...tasks].sort((a, b) => {
-      // Mock time sort or use existing generic sort
-      return 0;
-    });
-    return sorted;
-  };
+useEffect(() => {
+  fetchData();
+}, []);
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const [tasksRes, streamsRes] = await Promise.all([
+  //         todoAPI.getAllTasks(),
+  //         streamsAPI.getAllStreams()
+  //       ]);
+  //       setTasks(tasksRes.data);
+  //       setStreams(streamsRes.data);
+  //     } catch (error) {
+  //       console.error("Error fetching plan data", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchData();
+  // }, []);
+
+  // // Group by Time (Original Logic)
+  // const getTasksByTime = () => {
+  //   const sorted = [...tasks].sort((a, b) => {
+  //     // Mock time sort or use existing generic sort
+  //     return 0;
+  //   });
+  //   return sorted;
+  // };
 
   // Group by Stream (New Logic: List Layout)
   const getTasksByStream = () => {
