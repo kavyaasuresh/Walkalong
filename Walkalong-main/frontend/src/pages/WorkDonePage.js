@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Save, Calendar, Star, BookOpen, Clock, Tag } from 'lucide-react';
+import { Trash2, Star } from 'lucide-react';
 import { workDoneAPI, streamsAPI } from '../services/api';
 import './WorkDonePage.css';
 
@@ -15,7 +15,7 @@ const WorkDonePage = () => {
   const [streams, setStreams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
+  // const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -52,9 +52,9 @@ const WorkDonePage = () => {
     }
   };
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-  };
+  // const handleDateChange = (date) => {
+  //   setSelectedDate(date);
+  // };
 
   const addNewItem = () => {
     const newItem = {
@@ -108,7 +108,7 @@ const WorkDonePage = () => {
 
     } catch (err) {
       console.error(err);
-      setError("Failed to save log.");
+      console.error("Failed to save log.");
     } finally {
       setSaving(false);
     }
